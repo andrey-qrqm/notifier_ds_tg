@@ -37,6 +37,13 @@ def get_nickname(author):
         logging.warning(f"get_nickname finds Exception: {e}, returns {author}")
         return author
 
+def send_data(data, url):
+    try:
+        requests.post(url, data).json()
+        logging.info(f"Request successfully sent {data}")
+        await asyncio.sleep(1)
+    except Exception as e:
+        logging.error(f"Request is not send, exception {e}")
 
 def run_discord_bot():
     TOKEN = os.getenv('TOKEN')
@@ -54,23 +61,13 @@ def run_discord_bot():
             event_msg = get_nickname(member.name) + ' joined the channel ' + str(after.channel)
             logging.info(f"event_msg created: {event_msg}")
             data = {'chat_id': {CHAT_ID}, 'text': event_msg}
-            try:
-                requests.post(url, data).json()
-                logging.info(f"Request successfully sent {data}")
-                await asyncio.sleep(1)
-            except Exception as e:
-                logging.error(f"Request is not send, exception {e}")
+            send_data(data, url)
 
         elif before.channel and not after.channel:
             event_msg = get_nickname(member.name) + ' left the channel ' + str(before.channel)
             print(event_msg)
             data = {'chat_id': {CHAT_ID}, 'text': event_msg}
-            try:
-                requests.post(url, data).json()
-                logging.info(f"Request successfully sent {data}")
-                await asyncio.sleep(1)
-            except Exception as e:
-                logging.error(f"Request is not send, exception {e}")
+            send_data(data, url)
 
     try:
         client.run(TOKEN)
