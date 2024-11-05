@@ -21,6 +21,7 @@ async def send_message(message, user_message, is_private):
         response = "Hello world"
         await message.author.send(response) if is_private else await message.channel.send(response)
     except Exception as e:
+        logging.error(f"Hello world raised exception: {e}")
         print(e)
 
 def get_nickname(author):
