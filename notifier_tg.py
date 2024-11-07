@@ -20,8 +20,8 @@ cur = conn.cursor()
 
 
 cur.execute("""CREATE TABLE IF NOT EXISTS tracking (
-    DISCORD_ID INTEGER PRIMARY KEY,
-    tg_chat_id INTEGER[]
+    DISCORD_ID TEXT PRIMARY KEY,
+    tg_chat_id BIGINT[]
     );
     """)
 conn.commit()
@@ -42,16 +42,16 @@ def extract_arg(arg):
 
 @bot.message_handler(commands='add_channel')
 async def add_channel(message):
-    channel = extract_arg(message.text)[0]
+    channel = str(extract_arg(message.text)[0])
     chat_id = str(message.chat.id)
     print(channel)
     cur.execute(f"""
         INSERT INTO tracking (DISCORD_ID, tg_chat_id)
-        VALUES ({channel}, ARRAY[{chat_id}])  -- Insert new DISCORD_ID with initial tg_chat_id array
+        VALUES ('{channel}', ARRAY[{chat_id}]::BIGINT[])  -- Insert new DISCORD_ID with initial tg_chat_id array
         ON CONFLICT (DISCORD_ID)  -- If DISCORD_ID already exists
         DO UPDATE
         SET tg_chat_id = CASE
-            WHEN NOT ARRAY[{chat_id}] <@ tracking.tg_chat_id THEN tracking.tg_chat_id || {chat_id}
+            WHEN NOT ARRAY[{chat_id}]::BIGINT[] <@ tracking.tg_chat_id THEN tracking.tg_chat_id || {chat_id}
             ELSE tracking.tg_chat_id
         END;
     """)
