@@ -42,7 +42,7 @@ def send_data(data, url):
     try:
         requests.post(url, data).json()
         logging.info(f"Request successfully sent {data}")
-        await asyncio.sleep(1)
+        #await asyncio.sleep(1)
     except Exception as e:
         logging.error(f"Request is not send, exception {e}")
 
