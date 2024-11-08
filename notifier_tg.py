@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.INFO, filename="py_log.log",filemode="w", form
 db_password = os.getenv('DATABASE_PW')
 port = os.getenv('PORT')
 
-conn = psycopg2.connect(host="localhost", dbname="postgres", user="postgres", password=db_password, port=port)
+conn = psycopg2.connect(host="db", dbname="postgres", user="postgres", password=db_password, port=port)
 cur = conn.cursor()
 
 
