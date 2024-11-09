@@ -4,18 +4,32 @@ services:
     image: postgres
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_PASSWORD: ${DATABASE_PW}  # Consistent reference to DATABASE_PW
       POSTGRES_DB: postgres
     ports:
       - "5432:5432"
 
-  app:
+  app1:
     build: .
-    environment:
-      - DATABASE_PW=${DB_PASSWORD}
-      - PORT=5432
     env_file:
-      - .env
+      - .env  # Reference the .env file here
+    environment:
+      - DATABASE_PW=${DATABASE_PW}  # Ensure DATABASE_PW is correctly passed
+      - PORT=5432
+    command: ["python", "launch_tg.py"]
+    depends_on:
+      - db
+    links:
+      - db
+
+  app2:
+    build: .
+    env_file:
+      - .env  # Reference the .env file here
+    environment:
+      - DATABASE_PW=${DATABASE_PW}  # Ensure DATABASE_PW is consistently used
+      - PORT=5432
+    command: ["python", "launch_ds.py"]
     depends_on:
       - db
     links:

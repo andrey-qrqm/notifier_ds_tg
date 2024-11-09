@@ -15,7 +15,7 @@ intents = discord.Intents.all()
 url = f'https://api.telegram.org/bot{TOKEN_TG}/sendMessage'
 print("RUNNING")
 logging.info('notifier_ds is RUNNING')
-db_password = os.getenv('DATABASE_PW')
+
 port = os.getenv('PORT')
 
 
@@ -56,7 +56,8 @@ def send_data(event_msg, url, discord_channel_name):
             logging.error(f"Request is not send, exception {e}")
 
 def take_ids(discord_channel_name):
-    conn = psycopg2.connect(host="localhost", dbname="postgres", user="postgres", password=db_password, port=port)
+    db_password = os.getenv('DATABASE_PW')
+    conn = psycopg2.connect(host="db", dbname="postgres", user="postgres", password=db_password, port=port)
     cur = conn.cursor()
     cur.execute(f"""
         SELECT tg_chat_id FROM tracking WHERE DISCORD_ID = '{discord_channel_name}' 
