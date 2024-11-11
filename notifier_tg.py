@@ -9,11 +9,36 @@ import psycopg2
 
 
 load_dotenv()
+
+
+
 token = os.getenv('TOKEN_TG')
 bot = AsyncTeleBot(token)
 logging.basicConfig(level=logging.INFO, filename="py_log.log",filemode="w", format="%(asctime)s %(levelname)s %(message)s")
 db_password = os.getenv('DATABASE_PW')
 port = os.getenv('PORT')
+
+def remove_spaces(input_str):
+    return input_str.replace(" ", "")
+
+db_password = remove_spaces(db_password)
+
+try:
+    conn = psycopg2.connect(
+        host="db",
+        dbname="postgres",
+        user="postgres",
+        password=db_password,
+        port=5432
+    )
+    print("Connection successful!")
+    logging.info("Connection succesful!")
+    conn.close()
+except psycopg2.OperationalError as e:
+    print(f"Password transmitted:{db_password}")
+    print("Connection failed:", e)
+    logging.error(f"Connection failed: {e}")
+
 
 conn = psycopg2.connect(host="db", dbname="postgres", user="postgres", password=db_password, port=port)
 cur = conn.cursor()
