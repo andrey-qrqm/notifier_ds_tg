@@ -104,7 +104,11 @@ async def remove_channel(message):
     # SQL query to delete the chat ID from the tg_chat_id array
     cur.execute(f"""
         UPDATE tracking
-        SET tg_chat_id = ARRAY(SELECT unnest(tg_chat_id) WHERE unnest(tg_chat_id) != {chat_id}::BIGINT)
+        SET tg_chat_id = ARRAY(
+            SELECT unnest(tg_chat_id)
+            EXCEPT
+            SELECT {chat_id}::BIGINT
+        )
         WHERE DISCORD_ID = '{channel}' AND {chat_id}::BIGINT = ANY(tg_chat_id);
     """)
 
