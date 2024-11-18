@@ -69,6 +69,7 @@ async def add_channel(message):
     channel = str(extract_arg(message.text)[0])
     chat_id = str(message.chat.id)
     print(channel)
+    logging.info(f"Adding channel {channel} for chat ID {chat_id}")
     cur.execute(f"""
         INSERT INTO tracking (DISCORD_ID, tg_chat_id)
         VALUES ('{channel}', ARRAY[{chat_id}]::BIGINT[])  -- Insert new DISCORD_ID with initial tg_chat_id array
@@ -86,6 +87,34 @@ async def add_channel(message):
     cur.execute("SELECT * FROM tracking")
     result = cur.fetchall()  # Fetch all rows from the query
     text = f"Channel added: {result}"
+    logging.info(text)
+    await bot.reply_to(message, text)
+
+
+@bot.message_handler(commands='remove_channel')
+async def remove_channel(message):
+    # Extract the channel and chat ID from the command text
+    channel = str(extract_arg(message.text)[0])
+    chat_id = str(message.chat.id)
+
+    # Print for debugging purposes
+    print(f"Removing channel {channel} for chat ID {chat_id}")
+    logging.info(f"Removing channel {channel} for chat ID {chat_id}")
+
+    # SQL query to delete the chat ID from the tg_chat_id array
+    cur.execute(f"""
+        UPDATE tracking
+        SET tg_chat_id = ARRAY(SELECT unnest(tg_chat_id) WHERE unnest(tg_chat_id) != {chat_id}::BIGINT)
+        WHERE DISCORD_ID = '{channel}' AND {chat_id}::BIGINT = ANY(tg_chat_id);
+    """)
+
+    conn.commit()  # Commit the update operation
+
+    # Fetch data from the tracking table to confirm deletion
+    cur.execute("SELECT * FROM tracking")
+    result = cur.fetchall()  # Fetch all rows from the query
+    text = f"Channel removed. Updated tracking data: {result}"
+    logging.info(text)
     await bot.reply_to(message, text)
 
 
