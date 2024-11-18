@@ -54,13 +54,13 @@ conn.commit()
 @bot.message_handler(commands=['help', 'start'])
 async def send_help(message):
     text = """
-    Hey, I'm your Discord to Telegram Notifier bot!\n
-    I will track added Discord guilds and notify you when somebody enters voice chat\n
-    What can I do?\n
-    help, start - send help(this message)\n
-    add_channel [Name_of_guild] - Add Discord guild to tracking in this chat. Discord Bot should be added to the discord guild
-    (If you want to add Bot to your discord guild, use this link - )\n
-    remove_channel [Name_of_guild] - remove Discord guild from tracking in this chat
+    Hey, I'm your Discord to Telegram Notifier bot!
+    I will track added Discord guilds and notify you when somebody enters voice chat
+    What can I do?
+    /help, /start - send help(this message)
+    /add_channel [Name_of_guild] - Add Discord guild to tracking in this chat. Discord Bot should be added to the discord guild
+    (If you want to add Bot to your discord guild, use this link - )
+    /remove_channel [Name_of_guild] - remove Discord guild from tracking in this chat
     """
     await bot.reply_to(message, text)
 
