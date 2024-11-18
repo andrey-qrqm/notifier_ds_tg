@@ -6,7 +6,7 @@ import logging
 from dotenv import load_dotenv
 import os
 
-logging.basicConfig(level=logging.INFO, filename="py_log.log",filemode="w", format="%(asctime)s %(levelname)s %(message)s")
+logging.basicConfig(level=logging.INFO, filename="py_log.log", filemode="w", format="%(asctime)s %(levelname)s %(message)s")
 
 load_dotenv()
 TOKEN_TG = os.getenv('TOKEN_TG')
@@ -77,10 +77,23 @@ def run_discord_bot():
     async def on_ready():
         logging.info(f"{client.user} is now running")
         text_channel_list = []
+
+        db_password = os.getenv('DATABASE_PW')
+        conn = psycopg2.connect(host="db", dbname="postgres", user="postgres", password=db_password, port=port)
+        cur = conn.cursor()
+
         for guild in client.guilds:
             if guild.name not in text_channel_list:
                 text_channel_list.append(guild.name)
+                cur.execute(f"""
+                    INSERT INTO tracking (DISCORD_ID, tg_chat_id)
+                    VALUES ('{guild.name}', ARRAY[]::BIGINT[])  -- Insert new DISCORD_ID with empty tg_chat_id array
+                    ON CONFLICT (DISCORD_ID)  -- If DISCORD_ID already exists
+                    DO NOTHING;
+                """)
             print(text_channel_list)
+        conn.commit()
+        conn.close()
 
 
     @client.event

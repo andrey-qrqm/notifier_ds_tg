@@ -35,7 +35,6 @@ try:
     logging.info("Connection succesful!")
     conn.close()
 except psycopg2.OperationalError as e:
-    #print(f"Password transmitted:{db_password}")
     print("Connection failed:", e)
     logging.error(f"Connection failed: {e}")
 
