@@ -13,6 +13,8 @@ TOKEN_TG = os.getenv('TOKEN_TG')
 CHAT_ID = os.getenv('CHAT_ID')
 intents = discord.Intents.all()
 url = f'https://api.telegram.org/bot{TOKEN_TG}/sendMessage'
+
+
 print("RUNNING")
 logging.info('notifier_ds is RUNNING')
 
@@ -76,12 +78,13 @@ def run_discord_bot():
     @client.event
     async def on_ready():
         logging.info(f"{client.user} is now running")
-        text_channel_list = []
+        await get_existing_guilds()
 
+    async def get_existing_guilds() -> list[str]:
+        text_channel_list = []
         db_password = os.getenv('DATABASE_PW')
         conn = psycopg2.connect(host="db", dbname="postgres", user="postgres", password=db_password, port=port)
         cur = conn.cursor()
-
         for guild in client.guilds:
             if guild.name not in text_channel_list:
                 text_channel_list.append(guild.name)
@@ -92,9 +95,10 @@ def run_discord_bot():
                     DO NOTHING;
                 """)
             print(text_channel_list)
+        logging.info(text_channel_list)
         conn.commit()
         conn.close()
-
+        return text_channel_list
 
     @client.event
     async def on_voice_state_update(member, before, after):
