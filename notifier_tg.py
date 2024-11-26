@@ -7,10 +7,7 @@ from dotenv import load_dotenv
 import psycopg2
 
 
-
 load_dotenv()
-
-
 
 token = os.getenv('TOKEN_TG')
 bot = AsyncTeleBot(token)
@@ -21,34 +18,45 @@ port = os.getenv('PORT')
 def remove_spaces(input_str):
     return input_str.replace(" ", "")
 
-db_password = remove_spaces(db_password)
 
-try:
-    conn = psycopg2.connect(
-        host="db",
-        dbname="postgres",
-        user="postgres",
-        password=db_password,
-        port=5432
-    )
-    print("Connection successful!")
-    logging.info("Connection succesful!")
-    conn.close()
-except psycopg2.OperationalError as e:
-    print("Connection failed:", e)
-    logging.error(f"Connection failed: {e}")
-
-
-conn = psycopg2.connect(host="db", dbname="postgres", user="postgres", password=db_password, port=port)
-cur = conn.cursor()
+def conn_check():
+    global db_password, conn
+    db_password = remove_spaces(db_password)
+    try:
+        conn = psycopg2.connect(
+            host="db",
+            dbname="postgres",
+            user="postgres",
+            password=db_password,
+            port=5432
+        )
+        print("Connection successful!")
+        logging.info("Connection succesful!")
+        conn.close()
+    except psycopg2.OperationalError as e:
+        print("Connection failed:", e)
+        logging.error(f"Connection failed: {e}")
 
 
-cur.execute("""CREATE TABLE IF NOT EXISTS tracking (
+conn_check()
+
+
+def create_database_conn():
+    global conn, cur
+    conn = psycopg2.connect(host="db", dbname="postgres", user="postgres", password=db_password, port=port)
+    cur = conn.cursor()
+    cur.execute("""CREATE TABLE IF NOT EXISTS tracking (
     DISCORD_ID TEXT PRIMARY KEY,
     tg_chat_id BIGINT[]
     );
     """)
-conn.commit()
+    conn.commit()
+    cur.execute("""SELECT * FROM tracking""")
+    channels = cur.fetchall()
+    logging.info(f"channels - {channels}")
+
+
+create_database_conn()
 
 
 @bot.message_handler(commands=['help', 'start'])
