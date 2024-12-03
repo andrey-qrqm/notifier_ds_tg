@@ -18,6 +18,7 @@ logging.basicConfig(level=logging.INFO,
 db_password = os.getenv('DATABASE_PW')
 port = os.getenv('PORT')
 
+
 def remove_spaces(input_str):
     return input_str.replace(" ", "")
 
@@ -46,7 +47,13 @@ conn_check()
 
 def create_database_conn():
     global conn, cur
-    conn = psycopg2.connect(host="db", dbname="postgres", user="postgres", password=db_password, port=port)
+    conn = psycopg2.connect(
+        host="db",
+        dbname="postgres",
+        user="postgres",
+        password=db_password,
+        port=port
+    )
     cur = conn.cursor()
     cur.execute("""CREATE TABLE IF NOT EXISTS tracking (
     DISCORD_ID TEXT PRIMARY KEY,
@@ -69,19 +76,23 @@ async def send_help(message):
     I will track added Discord guilds and notify you when somebody enters voice chat
     What can I do?
     /help, /start - send help(this message)
-    /add_channel [Name_of_guild] - Add Discord guild to tracking in this chat. Discord Bot should be added to the discord guild
+    /add_channel [Name_of_guild] - Add Discord guild to tracking in this chat. Discord Bot should be added to the
+    discord guild
     (If you want to add Bot to your discord guild, use this link - )
     /remove_channel [Name_of_guild] - remove Discord guild from tracking in this chat
     """
     await bot.reply_to(message, text)
+
 
 @bot.message_handler(commands='get_ip')
 async def send_ip(message):
     text = message.chat.id
     await bot.reply_to(message, text)
 
+
 def extract_arg(arg):
     return arg.split()[1:]
+
 
 @bot.message_handler(commands='add_channel')
 async def add_channel(message):
