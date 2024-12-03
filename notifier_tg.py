@@ -11,10 +11,12 @@ load_dotenv()
 
 token = os.getenv('TOKEN_TG')
 bot = AsyncTeleBot(token)
-logging.basicConfig(level=logging.INFO,
-                    filename="py_log.log",
-                    filemode="w",
-                    format="%(asctime)s %(levelname)s %(message)s")
+logging.basicConfig(
+    level=logging.INFO,
+    filename="py_log.log",
+    filemode="w",
+    format="%(asctime)s %(levelname)s %(message)s"
+)
 db_password = os.getenv('DATABASE_PW')
 port = os.getenv('PORT')
 
