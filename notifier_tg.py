@@ -24,7 +24,6 @@ def remove_spaces(input_str):
     return input_str.replace(" ", "")
 
 
-
 def conn_check():
     global db_password, conn
     db_password = remove_spaces(db_password)
@@ -44,8 +43,6 @@ def conn_check():
         logging.error(f"Connection failed: {e}")
 
 
-
-
 @bot.message_handler(commands=['help', 'start'])
 async def send_help(message):
     text = """
@@ -59,7 +56,6 @@ async def send_help(message):
     /remove_channel [Name_of_guild] - remove Discord guild from tracking in this chat
     """
     await bot.reply_to(message, text)
-
 
 
 @bot.message_handler(commands='get_ip')
