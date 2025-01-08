@@ -49,8 +49,8 @@ def get_nickname(author):
         return author
 
 
-def send_data(event_msg, url, discord_channel_name):
-    list_tg_id = take_ids(discord_channel_name)
+def send_data(event_msg, url, discord_channel_name, conn):
+    list_tg_id = take_ids(discord_channel_name, conn)
     print(list_tg_id, '  ', list_tg_id[0][0])
     for tg_id in list_tg_id[0][0]:
         print(tg_id)
@@ -62,15 +62,7 @@ def send_data(event_msg, url, discord_channel_name):
             logging.error(f"Request is not send, exception {e}")
 
 
-def take_ids(discord_channel_name):
-    db_password = os.getenv('DATABASE_PW')
-    conn = psycopg2.connect(
-            host="db",
-            dbname="postgres",
-            user="postgres",
-            password=db_password,
-            port=5432
-        )
+def take_ids(discord_channel_name, conn):
     cur = conn.cursor()
     cur.execute(f"""
         SELECT tg_chat_id FROM tracking WHERE DISCORD_ID = '{discord_channel_name}' 
@@ -82,26 +74,32 @@ def take_ids(discord_channel_name):
     return list_tg_ids
 
 
+def db_connect():
+    db_password = os.getenv('DATABASE_PW')
+    conn = psycopg2.connect(
+        host="db",
+        dbname="postgres",
+        user="postgres",
+        password=db_password,
+        port=5432
+    )
+    return conn
+
+
 def run_discord_bot():
+    global intents
     token = os.getenv('TOKEN')
-    intents = discord.Intents.all()
     client = discord.Client(intents=intents)
 
     @client.event
     async def on_ready():
         logging.info(f"{client.user} is now running")
-        await get_existing_guilds()
+        conn = db_connect()
+        await get_existing_guilds(conn)
 
-    async def get_existing_guilds() -> list[str]:
+    async def get_existing_guilds(db_connection) -> list[str]:
         text_channel_list = []
-        db_password = os.getenv('DATABASE_PW')
-        conn = psycopg2.connect(
-            host="db",
-            dbname="postgres",
-            user="postgres",
-            password=db_password,
-            port=5432
-        )
+        conn = db_connection
         cur = conn.cursor()
         for guild in client.guilds:
             if guild.name not in text_channel_list:
@@ -124,12 +122,14 @@ def run_discord_bot():
         if not before.channel and after.channel:
             event_msg = get_nickname(member.name) + ' joined the channel ' + str(after.channel)
             logging.info(f"event_msg created: {event_msg}")
-            send_data(event_msg, URL, discord_channel_name)
+            conn = db_connect()
+            send_data(event_msg, URL, discord_channel_name, conn)
             print(member.guild)
 
         elif before.channel and not after.channel:
             event_msg = get_nickname(member.name) + ' left the channel ' + str(before.channel)
-            send_data(event_msg, URL, discord_channel_name)
+            conn = db_connect()
+            send_data(event_msg, URL, discord_channel_name, conn)
             print(member.guild)
 
     try:
@@ -137,3 +137,7 @@ def run_discord_bot():
         logging.info("client.run successful")
     except Exception as e:
         logging.error(f"client.run has not succeeded, error: {e}")
+
+
+if __name__ == "__main__":
+    run_discord_bot()
