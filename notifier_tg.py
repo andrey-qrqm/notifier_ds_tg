@@ -7,6 +7,17 @@ from dotenv import load_dotenv
 import psycopg2
 
 
+load_dotenv()
+token = os.getenv('TOKEN_TG')
+bot = AsyncTeleBot(token)
+logging.basicConfig(
+    level=logging.INFO,
+    filename="py_log.log",
+    filemode="w",
+    format="%(asctime)s %(levelname)s %(message)s"
+)
+db_password = os.getenv('DATABASE_PW')
+port = os.getenv('PORT')
 
 
 def remove_spaces(input_str):
@@ -83,19 +94,9 @@ def extract_arg(arg):
 
 
 if __name__ == "__main__":
-    load_dotenv()
-    token = os.getenv('TOKEN_TG')
-    bot = AsyncTeleBot(token)
-    logging.basicConfig(
-        level=logging.INFO,
-        filename="py_log.log",
-        filemode="w",
-        format="%(asctime)s %(levelname)s %(message)s"
-    )
-    db_password = os.getenv('DATABASE_PW')
-    port = os.getenv('PORT')
     conn_check()
     create_database_conn()
+
 
 @bot.message_handler(commands='add_channel')
 async def add_channel(message):
