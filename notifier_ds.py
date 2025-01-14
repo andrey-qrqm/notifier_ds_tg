@@ -27,8 +27,10 @@ logging.info('notifier_ds is started')
 
 port = os.getenv('PORT')
 
+
 def generate_event_id():
     return str(uuid.uuid4())
+
 
 async def send_message(message, is_private):
     try:
@@ -53,7 +55,6 @@ def get_nickname(author):
         except Exception as e:
             logging.warning(f"get_nickname finds Exception: {e}, returns {author}")
             return author
-
 
 
 def send_data(event_msg, url, discord_channel_name, conn, event_id):
