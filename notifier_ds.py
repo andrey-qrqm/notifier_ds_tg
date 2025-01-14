@@ -68,11 +68,12 @@ def send_data(event_msg, url, discord_channel_name, conn, event_id):
         data = {'chat_id': {int(tg_id)}, 'text': event_msg}
         try:
             requests.post(url, data).json()
-            telegram_notification_timestamp = datetime.utcnow()
-            update_telegram_notification(conn, event_id, telegram_notification_timestamp)
             logging.info(f"Request successfully sent {data}")
         except Exception as e:
             logging.error(f"Request is not send, exception {e}")
+
+    telegram_notification_timestamp = datetime.utcnow()
+    update_telegram_notification(conn, event_id, telegram_notification_timestamp)
 
 
 def take_ids(discord_channel_name, conn):
