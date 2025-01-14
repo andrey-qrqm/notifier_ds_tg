@@ -1,6 +1,7 @@
 import os
 import logging
 import asyncio
+import time
 import psycopg2
 import discord
 import requests
@@ -21,8 +22,8 @@ intents = discord.Intents.all()
 URL = f'https://api.telegram.org/bot{TOKEN_TG}/sendMessage'
 
 
-print("RUNNING")
-logging.info('notifier_ds is RUNNING')
+print("Started")
+logging.info('notifier_ds is started')
 
 port = os.getenv('PORT')
 
@@ -39,28 +40,35 @@ async def send_message(message, is_private):
 
 
 def get_nickname(author):
-    try:
-        if '(' in author:
-            i = author.index('(') + 1
-            nickname = author[i:(len(author) - 1)]
-            logging.info(f"get_nickname returns nickname: {nickname}")
-            return nickname
-        else:
-            logging.info(f"get_nickname returns author: {author}")
+    if author is not None:
+        try:
+            if '(' in author:
+                i = author.index('(') + 1
+                nickname = author[i:(len(author) - 1)]
+                logging.info(f"get_nickname returns nickname: {nickname}")
+                return nickname
+            else:
+                logging.info(f"get_nickname returns author: {author}")
+                return author
+        except Exception as e:
+            logging.warning(f"get_nickname finds Exception: {e}, returns {author}")
             return author
-    except Exception as e:
-        logging.warning(f"get_nickname finds Exception: {e}, returns {author}")
-        return author
+
 
 
 def send_data(event_msg, url, discord_channel_name, conn, event_id):
     list_tg_id = take_ids(discord_channel_name, conn)
     print(list_tg_id, '  ', list_tg_id[0][0])
+    if not list_tg_id:
+        logging.warning(f"No Telegram IDs found for channel {discord_channel_name}")
+        return
     for tg_id in list_tg_id[0][0]:
         print(tg_id)
         data = {'chat_id': {int(tg_id)}, 'text': event_msg}
         try:
             requests.post(url, data).json()
+            telegram_notification_timestamp = datetime.utcnow()
+            update_telegram_notification(conn, event_id, telegram_notification_timestamp)
             logging.info(f"Request successfully sent {data}")
         except Exception as e:
             logging.error(f"Request is not send, exception {e}")
@@ -69,11 +77,9 @@ def send_data(event_msg, url, discord_channel_name, conn, event_id):
 def take_ids(discord_channel_name, conn):
     cur = conn.cursor()
     cur.execute(f"""
-        SELECT tg_chat_id FROM tracking WHERE DISCORD_ID = '{discord_channel_name}' 
-    """)
+        SELECT tg_chat_id FROM tracking WHERE DISCORD_ID = %s 
+    """, (discord_channel_name,))
     list_tg_ids = cur.fetchall()  # Fetch all rows from the query result
-    conn.commit()
-    conn.close()
     print(list_tg_ids)
     return list_tg_ids
 
@@ -111,6 +117,25 @@ def record_discord_event(db_connection, event_id, discord_event_timestamp):
         logging.error(f"Error recording Discord event: {e}")
 
 
+def update_telegram_notification(db_connection, event_id, telegram_notification_timestamp):
+    try:
+        # Connect to your PostgreSQL database
+        conn = db_connection
+        cursor = conn.cursor()
+
+        # Update event in the table
+        query = """
+        UPDATE discord_to_telegram_delays
+        SET telegram_notification_timestamp = %s
+        WHERE event_id = %s;
+        """
+        cursor.execute(query, (telegram_notification_timestamp, event_id))
+        conn.commit()
+        print(f"Updated Telegram notification timestamp for event: {event_id}")
+    except Exception as e:
+        print(f"Error updating Telegram notification: {e}")
+
+
 def run_discord_bot():
     global intents
     token = os.getenv('TOKEN')
@@ -131,10 +156,10 @@ def run_discord_bot():
                 text_channel_list.append(guild.name)
                 cur.execute(f"""
                     INSERT INTO tracking (DISCORD_ID, tg_chat_id)
-                    VALUES ('{guild.name}', ARRAY[]::BIGINT[])  -- Insert new DISCORD_ID with empty tg_chat_id array
+                    VALUES (%s, ARRAY[]::BIGINT[])  -- Insert new DISCORD_ID with empty tg_chat_id array
                     ON CONFLICT (DISCORD_ID)  -- If DISCORD_ID already exists
                     DO NOTHING;
-                """)
+                """, (guild.name, ))
             print(text_channel_list)
         logging.info(text_channel_list)
         conn.commit()
@@ -145,26 +170,37 @@ def run_discord_bot():
     async def on_voice_state_update(member, before, after):
         discord_channel_name = str(member.guild)
         if not before.channel and after.channel:
-            conn = db_connect()
-            discord_event_timestamp = datetime.utcnow()
-            event_id = generate_event_id()
-            record_discord_event(conn, event_id, discord_event_timestamp)
-            event_msg = get_nickname(member.nick) + ' joined the channel ' + str(after.channel)
+            conn = db_connect()  # On this conn
+            discord_event_timestamp = datetime.utcnow()  # Take current time
+            event_id = generate_event_id()  # Generate unique Event Id
+            record_discord_event(conn, event_id, discord_event_timestamp)  # Make a record in the delays db
+            event_msg = get_nickname(member.nick) + ' joined the channel ' + str(after.channel)  # create an output
             logging.info(f"event_msg created: {event_msg}")
-            send_data(event_msg, URL, discord_channel_name, conn, event_id)
+            send_data(event_msg, URL, discord_channel_name, conn, event_id)  # Call func to send data on tg
             print(member.guild)
+            conn.commit()
+            conn.close()
 
         elif before.channel and not after.channel:
-            event_msg = get_nickname(member.nick) + ' left the channel ' + str(before.channel)
-            conn = db_connect()
-            send_data(event_msg, URL, discord_channel_name, conn)
+            conn = db_connect()  # On this conn
+            discord_event_timestamp = datetime.utcnow()  # Take current time
+            event_id = generate_event_id()  # Generate unique Event Id
+            record_discord_event(conn, event_id, discord_event_timestamp)  # Make a record in the delays db
+            event_msg = get_nickname(member.nick) + ' left the channel ' + str(before.channel)  # create an output
+            logging.info(f"event_msg created: {event_msg}")
+            send_data(event_msg, URL, discord_channel_name, conn, event_id)  # Call func to send data on tg
             print(member.guild)
+            conn.commit()
+            conn.close()
 
-    try:
-        client.run(token)
-        logging.info("client.run successful")
-    except Exception as e:
-        logging.error(f"client.run has not succeeded, error: {e}")
+    attempt = 1
+    while True:
+        try:
+            client.run(token)
+        except Exception as e:
+            logging.error(f"Discord bot crashed: {e}")
+            time.sleep(min(10 * attempt, 600))  # Max wait time: 10 minutes
+            attempt += 1
 
 
 if __name__ == "__main__":
