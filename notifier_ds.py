@@ -4,6 +4,8 @@ import asyncio
 import psycopg2
 import discord
 import requests
+import uuid
+from datetime import datetime
 from dotenv import load_dotenv
 
 logging.basicConfig(
@@ -24,6 +26,8 @@ logging.info('notifier_ds is RUNNING')
 
 port = os.getenv('PORT')
 
+def generate_event_id():
+    return str(uuid.uuid4())
 
 async def send_message(message, is_private):
     try:
@@ -49,7 +53,7 @@ def get_nickname(author):
         return author
 
 
-def send_data(event_msg, url, discord_channel_name, conn):
+def send_data(event_msg, url, discord_channel_name, conn, event_id):
     list_tg_id = take_ids(discord_channel_name, conn)
     print(list_tg_id, '  ', list_tg_id[0][0])
     for tg_id in list_tg_id[0][0]:
@@ -86,6 +90,27 @@ def db_connect():
     return conn
 
 
+def record_discord_event(db_connection, event_id, discord_event_timestamp):
+    try:
+        # Connect to your PostgreSQL database
+        conn = db_connection
+        cur = conn.cursor()
+
+        # Insert event into the table
+        query = """
+        INSERT INTO discord_to_telegram_delays (event_id, discord_event_timestamp)
+        VALUES (%s, %s)
+        ON CONFLICT (event_id) DO NOTHING;
+        """
+        cur.execute(query, (event_id, discord_event_timestamp))
+        conn.commit()
+        print(f"Recorded Discord event: {event_id}")
+        logging.info(f"Recorded Discord event: {event_id}")
+    except Exception as e:
+        print(f"Error recording Discord event: {e}")
+        logging.error(f"Error recording Discord event: {e}")
+
+
 def run_discord_bot():
     global intents
     token = os.getenv('TOKEN')
@@ -120,10 +145,13 @@ def run_discord_bot():
     async def on_voice_state_update(member, before, after):
         discord_channel_name = str(member.guild)
         if not before.channel and after.channel:
+            conn = db_connect()
+            discord_event_timestamp = datetime.utcnow()
+            event_id = generate_event_id()
+            record_discord_event(conn, event_id, discord_event_timestamp)
             event_msg = get_nickname(member.nick) + ' joined the channel ' + str(after.channel)
             logging.info(f"event_msg created: {event_msg}")
-            conn = db_connect()
-            send_data(event_msg, URL, discord_channel_name, conn)
+            send_data(event_msg, URL, discord_channel_name, conn, event_id)
             print(member.guild)
 
         elif before.channel and not after.channel:
