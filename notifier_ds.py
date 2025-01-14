@@ -120,14 +120,14 @@ def run_discord_bot():
     async def on_voice_state_update(member, before, after):
         discord_channel_name = str(member.guild)
         if not before.channel and after.channel:
-            event_msg = get_nickname(member.name) + ' joined the channel ' + str(after.channel)
+            event_msg = get_nickname(member.nick) + ' joined the channel ' + str(after.channel)
             logging.info(f"event_msg created: {event_msg}")
             conn = db_connect()
             send_data(event_msg, URL, discord_channel_name, conn)
             print(member.guild)
 
         elif before.channel and not after.channel:
-            event_msg = get_nickname(member.name) + ' left the channel ' + str(before.channel)
+            event_msg = get_nickname(member.nick) + ' left the channel ' + str(before.channel)
             conn = db_connect()
             send_data(event_msg, URL, discord_channel_name, conn)
             print(member.guild)
