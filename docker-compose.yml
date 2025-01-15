@@ -32,8 +32,7 @@ services:
     command: ["python", "launch_tg.py"]
     depends_on:
       - db
-    links:
-      - db
+
 
   app2:
     build: .
@@ -48,8 +47,7 @@ services:
     command: ["python", "launch_ds.py"]
     depends_on:
       - db
-    links:
-      - db
+
 
   prometheus:
     image: prom/prometheus:latest
