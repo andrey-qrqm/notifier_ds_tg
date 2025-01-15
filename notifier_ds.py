@@ -33,6 +33,7 @@ def generate_event_id():
 
 
 async def send_message(message, is_private):
+    # currently not in use
     try:
         response = "Hello world"
         await message.author.send(response) if is_private else await message.channel.send(response)
@@ -72,11 +73,12 @@ def send_data(event_msg, url, discord_channel_name, conn, event_id):
         except Exception as e:
             logging.error(f"Request is not send, exception {e}")
 
-    telegram_notification_timestamp = datetime.utcnow()
-    update_telegram_notification(conn, event_id, telegram_notification_timestamp)
+    telegram_notification_timestamp = datetime.utcnow()  # create a timestamp
+    update_telegram_notification(conn, event_id, telegram_notification_timestamp)  # update a table for metric
 
 
 def take_ids(discord_channel_name, conn):
+    # currently not in use
     cur = conn.cursor()
     cur.execute(f"""
         SELECT tg_chat_id FROM tracking WHERE DISCORD_ID = %s 
@@ -87,6 +89,7 @@ def take_ids(discord_channel_name, conn):
 
 
 def db_connect():
+    # Connect to the db
     db_password = os.getenv('DATABASE_PW')
     conn = psycopg2.connect(
         host="db",
@@ -99,6 +102,7 @@ def db_connect():
 
 
 def record_discord_event(db_connection, event_id, discord_event_timestamp):
+    # Record the discord timestamp for metrics
     try:
         # Connect to your PostgreSQL database
         conn = db_connection
@@ -120,6 +124,7 @@ def record_discord_event(db_connection, event_id, discord_event_timestamp):
 
 
 def update_telegram_notification(db_connection, event_id, telegram_notification_timestamp):
+    # Record the telegram timestamp for metrics
     try:
         # Connect to your PostgreSQL database
         conn = db_connection
@@ -150,6 +155,7 @@ def run_discord_bot():
         await get_existing_guilds(conn)
 
     async def get_existing_guilds(db_connection) -> list[str]:
+        # Returns list of Guilds Names, where the bot is activated
         text_channel_list = []
         conn = db_connection
         cur = conn.cursor()
@@ -170,6 +176,7 @@ def run_discord_bot():
 
     @client.event
     async def on_voice_state_update(member, before, after):
+        # Event of joining and leaving:
         discord_channel_name = str(member.guild)
         if not before.channel and after.channel:
             conn = db_connect()  # On this conn
