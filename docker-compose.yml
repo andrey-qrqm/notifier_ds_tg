@@ -78,3 +78,5 @@ services:
 
 volumes:
   pgdata:
+  prometheus_data:
+  grafana_data:
