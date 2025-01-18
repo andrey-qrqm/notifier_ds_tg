@@ -1,8 +1,10 @@
 version: '3.8'
 
+
 networks:
   app_network:
     driver: bridge
+
 
 services:
   db:
@@ -18,6 +20,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     restart: always
+
 
   app1:
     build: .
@@ -49,6 +52,22 @@ services:
       - db
 
 
+  app_metrics:
+    build: .
+    networks:
+      - app_network
+    env_file:
+      - .env
+    environment:
+      - DATABASE_PW=${DATABASE_PW}  # Pass the database password
+      - DATABASE_URL=postgresql://postgres:${DATABASE_PW}@db:5432/dbname  # PostgreSQL connection string
+    command: [ "python", "metrics.py" ]  # Launch the metrics.py script
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"  # Expose Prometheus metrics endpoint on port 8000
+
+
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
@@ -59,8 +78,10 @@ services:
       - "9090:9090"
     networks:
       - app_network
+    depends_on:
+      - app_metrics  # Ensure Prometheus waits for the metrics app
 
-    # Grafana service (optional)
+
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
@@ -75,6 +96,7 @@ services:
       - app_network
     volumes:
       - grafana_data:/var/lib/grafana
+
 
 volumes:
   pgdata:
