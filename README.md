@@ -100,4 +100,13 @@ analyze these metrics.
 [prometheus.yml](https://github.com/andrey-qrqm/notifier_ds_tg/blob/main/prometheus.yml)
 
 
+Clean Code Development:
 
+I've implemented some principles of the clean code development in this project.
+The great example would be here [Example](https://github.com/andrey-qrqm/notifier_ds_tg/blob/main/notifier_ds.py#L102)
+Function record_discord_event() is following the principles of CCD:
+1) Readable naming
+2) Single responsibility
+3) Clarity The SQL query is clear and self-explanatory, with meaningful column names (event_id, discord_event_timestamp).
+4) Error-Handling through try-except block
+5) Minimalism
