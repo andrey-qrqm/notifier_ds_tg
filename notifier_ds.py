@@ -1,6 +1,5 @@
 import os
 import logging
-import asyncio
 import time
 import psycopg2
 import discord
@@ -50,9 +49,8 @@ def get_nickname(author):
                 nickname = author[i:(len(author) - 1)]
                 logging.info(f"get_nickname returns nickname: {nickname}")
                 return nickname
-            else:
-                logging.info(f"get_nickname returns author: {author}")
-                return author
+            logging.info(f"get_nickname returns author: {author}")
+            return author
         except Exception as e:
             logging.warning(f"get_nickname finds Exception: {e}, returns {author}")
             return author
