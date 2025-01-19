@@ -1,6 +1,13 @@
 # notifier_ds_tg
 Script for sending updates and notifications from discord channel to telegram channel
 
+Firstly, I'm glad to announce, that this Application is currently app in WWW and ready to use. 
+I've used it to track activity on my friend's Discord Guild for a couple of weeks, and it's working.
+If you want to test it yourself I welcome you to test it with the command to my telegram bot: /add_channel 'Тестобот' or
+/add_channel 'Лигушатник'. With this commands Telegram Bot will notify you when somebody is joining/leaving
+any voice rooms in these channels.
+
+
 What actions can it do?
 
 1) In your Telegram App, find my Bot @NotifierFrogsBot ; Start a chat with Bot or add it in already existing chat
