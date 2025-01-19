@@ -21,6 +21,76 @@ DATABASE_PW = "Your database password"
 
 PORT = "port"
 
-To run: 
-docker-compose up --build
+The bot is running on remote server, using AWS EC2
+
+
+SRH Software Engineering (part for Prof. Edlich)
+
+Requirements, pdf exported from Notion [Requirements](./.github/src/list_of_reqs.pdf)
+
+Diagram of workflow [Workflow](.github/src/Diagram_of_app_relationships.pdf
+)
+
+Diagram of Domains [Domain Chart](.github/src/Diagram_DDD_Domain_chart.pdf)
+
+Diagram of CORE [CORE](.github/src/CORE.pdf)
+
+ANA - Analysis [ANA](https://docs.google.com/document/d/1akZDDUQj42m6rsIwgWtXcwa8Xqfb6b6WYqKlHNzBW2w/edit?usp=sharing)
+
+Refactoring example 1:
+
+Delete the else after return and de-indent the code, the logic has not changed, but the time to exec is less now
+
+[Example](https://github.com/andrey-qrqm/notifier_ds_tg/commit/c5fa62ec4a5325bb89cf0a5e4ff52104d6520ed4)
+
+Refactoring example 2:
+
+I've got rid of unnecessary connection set-ups and set-downs. Rewrote as a function and dependencies to better mock-up ability
+
+[Example](https://github.com/andrey-qrqm/notifier_ds_tg/commit/4e69e2d704ea4dc804c0a612ab258b204da4f490)
+
+Build Management:
+
+The app is build using docker-compose as an orchestrator of multiple docker containers.
+The Docker compose approach was chosen because this is a multi-container application with the need to define
+Network and Volumes. Also it helps with further automatization.
+
+[docker-compose.yml](https://github.com/andrey-qrqm/notifier_ds_tg/blob/main/docker-compose.yml)
+
+CI/CD:
+
+I'm using the GitHub Actions Pipeline to automate Docker image build and push to the Docker Hub
+
+[docker-build-push.yml](https://github.com/andrey-qrqm/notifier_ds_tg/blob/main/.github/workflows/docker-build-push.yml)
+
+Unit Tests:
+
+Unit Tests are made onto two main application (Discord Webhook Server + Bot, and Telegram Webhook Server + Bot)
+Tests are made using pytest and unittest.mock
+
+[Notifier Discord Tests](https://github.com/andrey-qrqm/notifier_ds_tg/blob/main/test_notifier_ds.py)
+[Notifier Telegram Tests](https://github.com/andrey-qrqm/notifier_ds_tg/blob/main/test_notifier_tg.py)
+
+IDE used: PyCharm Community Edition 
+
+Favorite Short-Cuts:
+
+CTRL + SHIFT + UP (Down) - moving the lines or whole functions through code
+
+CTRL + ALT + M - Extract Method
+
+
+METRICS
+
+To check code-quality metrics I used the External Tool Pylint (The average rating of code is 7.0)\
+
+To check health of the app I've created personal metrics of delays between event and notification
+
+I've created a second PostgreSQL Table to write in records of timings. Then I'm using Prometheus and Grafana to 
+analyze these metrics.
+
+[Metrics.py](https://github.com/andrey-qrqm/notifier_ds_tg/blob/main/metrics.py)
+[prometheus.yml](https://github.com/andrey-qrqm/notifier_ds_tg/blob/main/prometheus.yml)
+
+
 
