@@ -75,15 +75,17 @@ def create_database_conn():
     )
     cur = conn.cursor()
     cur.execute("""
-    CREATE TABLE IF NOT EXISTS tracking (
+        CREATE TABLE IF NOT EXISTS tracking (
         DISCORD_ID TEXT PRIMARY KEY,
-        tg_chat_id BIGINT[]
-        
+        tg_chat_id BIGINT[]  -- Array of BIGINTs (PostgreSQL only)
+    );
+    
     CREATE TABLE IF NOT EXISTS discord_to_telegram_delays (
         event_id SERIAL PRIMARY KEY,
         discord_event_timestamp TIMESTAMP NOT NULL,
         telegram_notification_timestamp TIMESTAMP NOT NULL
     );
+
     """)
     conn.commit()
     cur.execute("""SELECT * FROM tracking""")
