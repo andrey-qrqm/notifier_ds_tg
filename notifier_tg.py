@@ -25,7 +25,7 @@ def remove_spaces(input_str):
 
 
 def conn_check():
-    global db_password, conn
+    db_password = os.getenv('DATABASE_PW')
     db_password = remove_spaces(db_password)
     try:
         conn = psycopg2.connect(
@@ -41,6 +41,19 @@ def conn_check():
     except psycopg2.OperationalError as e:
         print("Connection failed:", e)
         logging.error(f"Connection failed: {e}")
+
+
+def db_connect():
+    # Connect to the db
+    db_password = os.getenv('DATABASE_PW')
+    conn = psycopg2.connect(
+        host="db",
+        dbname="postgres",
+        user="postgres",
+        password=db_password,
+        port=5432
+    )
+    return conn
 
 
 @bot.message_handler(commands=['help', 'start'])
@@ -65,7 +78,6 @@ async def send_ip(message):
 
 
 def create_database_conn():
-    global conn, cur
     conn = psycopg2.connect(
         host="db",
         dbname="postgres",
@@ -104,6 +116,8 @@ if __name__ == "__main__":
 
 @bot.message_handler(commands='add_channel')
 async def add_channel(message):
+    conn = db_connect()
+    cur = conn.cursor()
     channel = str(extract_arg(message.text)[0])
     chat_id = str(message.chat.id)
     print(channel)
@@ -131,6 +145,9 @@ async def add_channel(message):
 
 @bot.message_handler(commands='remove_channel')
 async def remove_channel(message):
+    conn = db_connect()
+    cur = conn.cursor()
+
     # Extract the channel and chat ID from the command text
     channel = str(extract_arg(message.text)[0])
     chat_id = str(message.chat.id)
