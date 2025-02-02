@@ -32,7 +32,7 @@ services:
       - DATABASE_PW=${DATABASE_PW}  # Ensure DATABASE_PW is correctly passed
       - PORT=5432
       - DATABASE_URL=postgresql://postgres:${DATABASE_PW}@db:5432/dbname  # PostgreSQL connection string
-    command: ["python", "launch_tg.py"]
+    command: ["python", "launch_tg.py",  "-r requirements.txt" ]
     depends_on:
       - db
 
@@ -47,7 +47,7 @@ services:
       - DATABASE_PW=${DATABASE_PW}  # Ensure DATABASE_PW is consistently used
       - PORT=5432
       - DATABASE_URL=postgresql://postgres:${DATABASE_PW}@db:5432/dbname  # PostgreSQL connection string
-    command: ["python", "launch_ds.py"]
+    command: ["python", "launch_ds.py",  "-r requirements.txt"]
     depends_on:
       - db
 
