@@ -78,11 +78,13 @@ def send_data(event_msg, url, discord_channel_name, conn, event_id):
 def take_ids(discord_channel_name, conn):
     # currently not in use
     cur = conn.cursor()
+    logging.info(f"discord_channel_name = {discord_channel_name}")
     cur.execute(f"""
-        SELECT tg_chat_id FROM tracking WHERE DISCORD_ID = {discord_channel_name}
-    """)
+        SELECT tg_chat_id FROM tracking WHERE DISCORD_ID = %s
+    """, (discord_channel_name,))
     list_tg_ids = cur.fetchall()  # Fetch all rows from the query result
     print(list_tg_ids)
+    logging.info(f"Fetched TG IDs: {list_tg_ids}")
     return list_tg_ids
 
 
