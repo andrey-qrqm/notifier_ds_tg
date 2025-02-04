@@ -94,7 +94,7 @@ def create_database_conn():
     );
     
     CREATE TABLE IF NOT EXISTS discord_to_telegram_delays (
-        event_id SERIAL PRIMARY KEY,
+        event_id UUID PRIMARY KEY,
         discord_event_timestamp TIMESTAMP NOT NULL,
         telegram_notification_timestamp TIMESTAMP NOT NULL
     );
