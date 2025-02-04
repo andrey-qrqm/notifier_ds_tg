@@ -109,9 +109,8 @@ def record_discord_event(db_connection, event_id, discord_event_timestamp):
         cur = conn.cursor()
 
         # Insert event into the table
-        query = """
-        INSERT INTO discord_to_telegram_delays (event_id, discord_event_timestamp)
-        VALUES (%s, %s)
+        query = f"""
+        INSERT INTO discord_to_telegram_delays {event_id}, {discord_event_timestamp}
         ON CONFLICT (event_id) DO NOTHING;
         """
         cur.execute(query, (event_id, discord_event_timestamp))
