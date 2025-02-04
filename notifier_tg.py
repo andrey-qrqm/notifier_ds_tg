@@ -78,6 +78,7 @@ async def send_ip(message):
 
 
 def create_database_conn():
+    global conn, cur
     conn = psycopg2.connect(
         host="db",
         dbname="postgres",
@@ -109,15 +110,13 @@ def extract_arg(arg):
     return arg.split()[1:]
 
 
-if __name__ == "__main__":
-    conn_check()
-    create_database_conn()
+
+conn_check()
+create_database_conn()
 
 
 @bot.message_handler(commands='add_channel')
 async def add_channel(message):
-    conn = db_connect()
-    cur = conn.cursor()
     channel = str(extract_arg(message.text)[0])
     chat_id = str(message.chat.id)
     print(channel)
@@ -145,9 +144,6 @@ async def add_channel(message):
 
 @bot.message_handler(commands='remove_channel')
 async def remove_channel(message):
-    conn = db_connect()
-    cur = conn.cursor()
-
     # Extract the channel and chat ID from the command text
     channel = str(extract_arg(message.text)[0])
     chat_id = str(message.chat.id)
