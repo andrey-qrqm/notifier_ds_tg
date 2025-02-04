@@ -113,7 +113,7 @@ def record_discord_event(db_connection, event_id, discord_event_timestamp):
         INSERT INTO discord_to_telegram_delays {event_id}, {discord_event_timestamp}
         ON CONFLICT (event_id) DO NOTHING;
         """
-        cur.execute(query, (event_id, discord_event_timestamp))
+        cur.execute(query)
         conn.commit()
         print(f"Recorded Discord event: {event_id}")
         logging.info(f"Recorded Discord event: {event_id}")
@@ -130,12 +130,12 @@ def update_telegram_notification(db_connection, event_id, telegram_notification_
         cursor = conn.cursor()
 
         # Update event in the table
-        query = """
+        query = f"""
         UPDATE discord_to_telegram_delays
-        SET telegram_notification_timestamp = %s
-        WHERE event_id = %s;
+        SET telegram_notification_timestamp = {telegram_notification_timestamp}
+        WHERE event_id = {event_id};
         """
-        cursor.execute(query, (telegram_notification_timestamp, event_id))
+        cursor.execute(query)
         conn.commit()
         print(f"Updated Telegram notification timestamp for event: {event_id}")
     except Exception as e:
