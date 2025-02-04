@@ -72,7 +72,7 @@ def send_data(event_msg, url, discord_channel_name, conn, event_id):
             logging.error(f"Request is not send, exception {e}")
 
     telegram_notification_timestamp = datetime.utcnow()  # create a timestamp
-    update_telegram_notification(conn, event_id, telegram_notification_timestamp)  # update a table for metric
+    #update_telegram_notification(conn, event_id, telegram_notification_timestamp)  # update a table for metric
 
 
 def take_ids(discord_channel_name, conn):
@@ -181,7 +181,7 @@ def run_discord_bot():
             conn = db_connect()  # On this conn
             discord_event_timestamp = datetime.utcnow()  # Take current time
             event_id = generate_event_id()  # Generate unique Event Id
-            record_discord_event(conn, event_id, discord_event_timestamp)  # Make a record in the delays db
+            #record_discord_event(conn, event_id, discord_event_timestamp)  # Make a record in the delays db
             event_msg = get_nickname(member.nick) + ' joined the channel ' + str(after.channel)  # create an output
             logging.info(f"event_msg created: {event_msg}")
             send_data(event_msg, URL, discord_channel_name, conn, event_id)  # Call func to send data on tg
@@ -193,7 +193,7 @@ def run_discord_bot():
             conn = db_connect()  # On this conn
             discord_event_timestamp = datetime.utcnow()  # Take current time
             event_id = generate_event_id()  # Generate unique Event Id
-            record_discord_event(conn, event_id, discord_event_timestamp)  # Make a record in the delays db
+            #record_discord_event(conn, event_id, discord_event_timestamp)  # Make a record in the delays db
             event_msg = get_nickname(member.nick) + ' left the channel ' + str(before.channel)  # create an output
             logging.info(f"event_msg created: {event_msg}")
             send_data(event_msg, URL, discord_channel_name, conn, event_id)  # Call func to send data on tg
