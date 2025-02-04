@@ -79,8 +79,8 @@ def take_ids(discord_channel_name, conn):
     # currently not in use
     cur = conn.cursor()
     cur.execute(f"""
-        SELECT tg_chat_id FROM tracking WHERE DISCORD_ID = %s 
-    """, (discord_channel_name,))
+        SELECT tg_chat_id FROM tracking WHERE DISCORD_ID = {discord_channel_name}
+    """)
     list_tg_ids = cur.fetchall()  # Fetch all rows from the query result
     print(list_tg_ids)
     return list_tg_ids
