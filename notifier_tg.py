@@ -122,6 +122,13 @@ def get_discord_guild_exists():
     return existing_guilds
 
 
+def list_to_text(l):
+    text = ""
+    for i in l:
+        text = text + str(i) + "\n"
+    return text
+
+
 conn_check()
 create_database_conn()
 
@@ -132,10 +139,11 @@ async def add_channel(message):
     chat_id = str(message.chat.id)
 
     existing_guilds = get_discord_guild_exists()
+    existing_guilds_text = list_to_text(existing_guilds)
 
     if channel not in existing_guilds:
         text = f"""Discord guild {channel} has not connected to our service yet.
-                    However, you can connect to these guilds: {existing_guilds}"""
+                    However, you can connect to these guilds: {existing_guilds_text}"""
         logging.info(f"user tried to connect to guild {channel}, while it is not connected to our system")
     else:
         logging.info(f"channel {channel} is found in existing guilds")
