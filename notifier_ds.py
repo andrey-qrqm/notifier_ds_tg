@@ -64,7 +64,11 @@ def send_data(event_msg, url, discord_channel_name, conn, event_id):
         return
     for tg_id in list_tg_id[0][0]:
         print(tg_id)
-        data = {'chat_id': {int(tg_id)}, 'text': event_msg}
+        data = {
+            'chat_id': {int(tg_id)},
+            'text': event_msg,
+            'disable_notification': True
+        }
         try:
             requests.post(url, data).json()
             logging.info(f"Request successfully sent {data}")
