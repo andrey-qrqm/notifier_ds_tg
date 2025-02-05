@@ -123,7 +123,7 @@ def get_discord_guild_exists():
 
 
 def list_to_text(l):
-    text = ""
+    text = "\n"
     for i in l:
         text = text + str(i) + "\n"
     return text
