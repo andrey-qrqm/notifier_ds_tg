@@ -80,6 +80,8 @@ services:
       - app_network
     depends_on:
       - app_metrics  # Ensure Prometheus waits for the metrics app
+    command:
+      - --web.external-url=http://localhost:9090/prometheus/
 
 
   grafana:
