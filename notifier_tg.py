@@ -110,6 +110,17 @@ def extract_arg(arg):
     return arg.split()[1:]
 
 
+def get_discord_guild_exists():
+    cur.execute(
+        """
+        SELECT DISCORD_ID 
+        FROM tracking;
+        """
+    )
+    result = cur.fetchall()
+    existing_guilds = result[0][0]
+    return existing_guilds
+
 
 conn_check()
 create_database_conn()
@@ -119,25 +130,34 @@ create_database_conn()
 async def add_channel(message):
     channel = str(extract_arg(message.text)[0])
     chat_id = str(message.chat.id)
-    print(channel)
-    logging.info(f"Adding channel {channel} for chat ID {chat_id}")
-    cur.execute(f"""
-        INSERT INTO tracking (DISCORD_ID, tg_chat_id)
-        VALUES ('{channel}', ARRAY[{chat_id}]::BIGINT[])  -- Insert new DISCORD_ID with initial tg_chat_id array
-        ON CONFLICT (DISCORD_ID)  -- If DISCORD_ID already exists
-        DO UPDATE
-        SET tg_chat_id = CASE
-            WHEN NOT ARRAY[{chat_id}]::BIGINT[] <@ tracking.tg_chat_id THEN tracking.tg_chat_id || {chat_id}
-            ELSE tracking.tg_chat_id
-        END;
-    """)
 
-    conn.commit()  # Commit the insert/update operation
+    existing_guilds = get_discord_guild_exists()
 
-    # Fetch data from the tracking table
-    cur.execute("SELECT * FROM tracking")
-    result = cur.fetchall()  # Fetch all rows from the query
-    text = f"Channel added: {result}"
+    if channel not in existing_guilds:
+        text = f"""Discord guild {channel} has not connected to our service yet.
+                    However, you can connect to these guilds: {existing_guilds}"""
+        logging.info(f"user tried to connect to guild {channel}, while it is not connected to our system")
+    else:
+        logging.info(f"channel {channel} is found in existing guilds")
+        print(channel)
+        logging.info(f"Adding channel {channel} for chat ID {chat_id}")
+        cur.execute(f"""
+            INSERT INTO tracking (DISCORD_ID, tg_chat_id)
+            VALUES ('{channel}', ARRAY[{chat_id}]::BIGINT[])  -- Insert new DISCORD_ID with initial tg_chat_id array
+            ON CONFLICT (DISCORD_ID)  -- If DISCORD_ID already exists
+            DO UPDATE
+            SET tg_chat_id = CASE
+                WHEN NOT ARRAY[{chat_id}]::BIGINT[] <@ tracking.tg_chat_id THEN tracking.tg_chat_id || {chat_id}
+                ELSE tracking.tg_chat_id
+            END;
+        """)
+
+        conn.commit()  # Commit the insert/update operation
+
+        # Fetch data from the tracking table
+        cur.execute("SELECT * FROM tracking")
+        result = cur.fetchall()  # Fetch all rows from the query
+        text = f"Channel added: {result}"
     logging.info(text)
     await bot.reply_to(message, text)
 
