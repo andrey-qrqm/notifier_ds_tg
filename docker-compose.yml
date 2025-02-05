@@ -89,9 +89,13 @@ services:
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
+    env_file:
+      - .env
     environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PW}
+      - GF_SERVER_ROOT_URL="%(protocol)s://%(domain)s:%(http_port)s/grafana/"
+      - GF_SERVER_SERVE_FROM_SUB_PATH="true"
     ports:
       - "3000:3000"
     depends_on:
