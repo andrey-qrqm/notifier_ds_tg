@@ -56,6 +56,13 @@ def get_nickname(author):
             return author
 
 
+def check_nickname_not_none(member):
+    nickname = get_nickname(member.nick)
+    if nickname is None:
+        nickname = member.name
+    return nickname
+
+
 def send_data(event_msg, url, discord_channel_name, conn, event_id):
     list_tg_id = take_ids(discord_channel_name, conn)
     print(list_tg_id, '  ', list_tg_id[0][0])
@@ -80,7 +87,6 @@ def send_data(event_msg, url, discord_channel_name, conn, event_id):
 
 
 def take_ids(discord_channel_name, conn):
-    # currently not in use
     cur = conn.cursor()
     logging.info(f"discord_channel_name = {discord_channel_name}")
     cur.execute(f"""
@@ -185,8 +191,13 @@ def run_discord_bot():
             conn = db_connect()  # On this conn
             discord_event_timestamp = datetime.utcnow()  # Take current time
             event_id = generate_event_id()  # Generate unique Event Id
+
             #record_discord_event(conn, event_id, discord_event_timestamp)  # Make a record in the delays db
-            event_msg = get_nickname(member.nick) + ' joined the channel ' + str(after.channel)  # create an output
+
+            user_trigger = str(check_nickname_not_none(member))
+            logging.info(f"user joined: {user_trigger}")
+
+            event_msg = user_trigger + ' joined the channel ' + str(after.channel)  # create an output
             logging.info(f"event_msg created: {event_msg}")
             send_data(event_msg, URL, discord_channel_name, conn, event_id)  # Call func to send data on tg
             print(member.guild)
@@ -197,8 +208,13 @@ def run_discord_bot():
             conn = db_connect()  # On this conn
             discord_event_timestamp = datetime.utcnow()  # Take current time
             event_id = generate_event_id()  # Generate unique Event Id
+
             #record_discord_event(conn, event_id, discord_event_timestamp)  # Make a record in the delays db
-            event_msg = get_nickname(member.nick) + ' left the channel ' + str(before.channel)  # create an output
+
+            user_trigger = str(check_nickname_not_none(member)) # Nickname/Name of user who left channel
+            logging.info(f"user left: {user_trigger}")
+
+            event_msg = user_trigger + ' left the channel ' + str(before.channel)  # create an output
             logging.info(f"event_msg created: {event_msg}")
             send_data(event_msg, URL, discord_channel_name, conn, event_id)  # Call func to send data on tg
             print(member.guild)
