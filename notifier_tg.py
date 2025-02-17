@@ -107,7 +107,8 @@ def create_database_conn():
 
 
 def extract_arg(arg):
-    return arg.split()[1:]
+    return " ".join(arg.split()[1:])  # removes the first word in arg, returns str of other words and spaces
+#   in this case it takes "add_channel Name of the channel" and returns "Name of the channel"
 
 
 def get_discord_guild_exists():
@@ -136,7 +137,7 @@ create_database_conn()
 
 @bot.message_handler(commands='add_channel')
 async def add_channel(message):
-    channel = str(extract_arg(message.text)[0])
+    channel = str(extract_arg(message.text))
     chat_id = str(message.chat.id)
 
     existing_guilds = get_discord_guild_exists()
@@ -174,7 +175,7 @@ async def add_channel(message):
 @bot.message_handler(commands='remove_channel')
 async def remove_channel(message):
     # Extract the channel and chat ID from the command text
-    channel = str(extract_arg(message.text)[0])
+    channel = str(extract_arg(message.text))
     chat_id = str(message.chat.id)
 
     # Print for debugging purposes
