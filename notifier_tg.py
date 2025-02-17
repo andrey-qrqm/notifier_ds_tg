@@ -118,8 +118,7 @@ def get_discord_guild_exists():
         """
     )
     result = cur.fetchall()
-    existing_guilds = result[0]
-    return existing_guilds
+    return result
 
 
 def list_to_text(l):
