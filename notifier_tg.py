@@ -118,6 +118,7 @@ def get_discord_guild_exists():
         """
     )
     result = cur.fetchall()
+    logging.info(f"get_discord_guild_exists: {result}")
     return result
 
 
@@ -125,6 +126,7 @@ def list_to_text(l):
     text = "\n"
     for i in l:
         text = text + str(i) + "\n"
+    logging.info(f"list_to_text: {text}")
     return text
 
 
