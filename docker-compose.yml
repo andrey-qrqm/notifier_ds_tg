@@ -68,45 +68,5 @@ services:
       - "8000:8000"  # Expose Prometheus metrics endpoint on port 8000
 
 
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: prometheus
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml  # Prometheus config
-      - prometheus_data:/prometheus
-    ports:
-      - "9090:9090"
-    networks:
-      - app_network
-    depends_on:
-      - app_metrics  # Ensure Prometheus waits for the metrics app
-    command:
-      - --web.external-url=http://localhost:9090/prometheus/
-      - --config.file=/etc/prometheus/prometheus.yml
-      - --storage.tsdb.path=/prometheus
-
-
-  grafana:
-    image: grafana/grafana:latest
-    container_name: grafana
-    env_file:
-      - .env
-    environment:
-      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER}
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PW}
-      - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s:%(http_port)s/grafana/
-      - GF_SERVER_SERVE_FROM_SUB_PATH=true
-    ports:
-      - "3000:3000"
-    depends_on:
-      - prometheus
-    networks:
-      - app_network
-    volumes:
-      - grafana_data:/var/lib/grafana
-
-
 volumes:
   pgdata:
-  prometheus_data:
-  grafana_data:
