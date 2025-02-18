@@ -126,7 +126,7 @@ def get_discord_guild_exists():
 def list_to_text(l):
     text = "\n"
     for i in l:
-        text = text + str(i) + "\n"
+        text = text + str(i[0]) + "\n"  # l - list_of_tuples with structure ("text",) -> i[o] refers to "text"
     logging.info(f"list_to_text: {text}")
     return text
 
