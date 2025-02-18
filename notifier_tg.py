@@ -118,15 +118,16 @@ def get_discord_guild_exists():
         FROM tracking;
         """
     )
-    result = cur.fetchall()
+    data = cur.fetchall()
+    result = [item[0] for item in data]  # Converting data [("text1", ),("text2", )] to ["text1", "text2"]
     logging.info(f"get_discord_guild_exists: {result}")
     return result
 
 
 def list_to_text(l):
-    text = "\n"
+    text = ""
     for i in l:
-        text = text + str(i[0]) + "\n"  # l - list_of_tuples with structure ("text",) -> i[o] refers to "text"
+        text = text + str(i) + "\n"
     logging.info(f"list_to_text: {text}")
     return text
 
