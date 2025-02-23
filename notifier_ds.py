@@ -8,7 +8,6 @@ import uuid
 from datetime import datetime
 from dotenv import load_dotenv
 
-# test comment
 
 logging.basicConfig(
     level=logging.INFO,
