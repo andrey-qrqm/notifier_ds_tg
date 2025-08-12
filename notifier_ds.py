@@ -223,6 +223,31 @@ def run_discord_bot():
             conn.commit()
             conn.close()
 
+
+    @client.event
+    async def on_scheduled_event_create(event):
+        logging.info(f"event {event.name} has been created, guild = {event.guild}, channel = {event.channel}")
+        conn = db_connect()
+        event_message = f"{event.name} in {event.guild}. Start - {event.start_time}"
+        event_id = generate_event_id()  # Generate unique Event Id
+        send_data(event_message, URL, str(event.guild), conn, event_id)
+        logging.info(f"send data - {event_message} to {event.guild}")
+        conn.commit()
+        conn.close()
+
+    @client.event
+    async def on_scheduled_event_delete(event):
+        logging.info(f"event {event.name} has been created, guild = {event.guild}, channel = {event.channel}")
+        conn = db_connect()
+        event_message = f"{event.name} in {event.guild}. Start - {event.start_time} IS DELETED"
+        event_id = generate_event_id()  # Generate unique Event Id
+        send_data(event_message, URL, str(event.guild), conn, event_id)
+        logging.info(f"send data - {event_message} to {event.guild}")
+        conn.commit()
+        conn.close()
+
+
+
     attempt = 1
     while True:
         try:
