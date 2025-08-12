@@ -5,7 +5,7 @@ import psycopg2
 import discord
 import requests
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
 # test 9
@@ -228,7 +228,8 @@ def run_discord_bot():
     async def on_scheduled_event_create(event):
         logging.info(f"event {event.name} has been created, guild = {event.guild}, channel = {event.channel}")
         conn = db_connect()
-        event_message = f"{event.name} in {event.guild}. Start - {event.start_time}"
+        event_time = event.start_time.strftime("%d %B, %H:%M") + timedelta(hours=3)
+        event_message = f"**{event.name}** in {event.guild}. Start - **{event_time}**"
         event_id = generate_event_id()  # Generate unique Event Id
         send_data(event_message, URL, str(event.guild), conn, event_id)
         logging.info(f"send data - {event_message} to {event.guild}")
@@ -239,7 +240,8 @@ def run_discord_bot():
     async def on_scheduled_event_delete(event):
         logging.info(f"event {event.name} has been created, guild = {event.guild}, channel = {event.channel}")
         conn = db_connect()
-        event_message = f"{event.name} in {event.guild}. Start - {event.start_time} IS DELETED"
+        event_time = event.start_time.strftime("%d %B, %H:%M") + timedelta(hours=3)
+        event_message = f"**{event.name}** in {event.guild}. Start - **{event_time}** IS DELETED"
         event_id = generate_event_id()  # Generate unique Event Id
         send_data(event_message, URL, str(event.guild), conn, event_id)
         logging.info(f"send data - {event_message} to {event.guild}")
