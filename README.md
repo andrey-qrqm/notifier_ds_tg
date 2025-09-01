@@ -1,110 +1,68 @@
-# notifier_ds_tg
-Script for sending updates and notifications from discord channel to telegram channel
+# Discord to Telegram Notifier
 
-Firstly, I'm glad to announce, that this Application is currently app in WWW and ready to use. 
-I've used it to track activity on my friend's Discord Guild for a couple of weeks, and it's working.
+A Discord bot that tracks voice channel activity and scheduled events, then sends notifications to Telegram channels.
 
+## Description
 
+This application monitors Discord guilds for:
+- Users joining/leaving voice channels
+- Scheduled events being created or deleted
+- Sends real-time notifications to configured Telegram chats
 
-What actions can it do?
+## Features
 
-1) In your Telegram App, find my Bot @NotifierFrogsBot ; Start a chat with Bot or add it in already existing chat
-2) In your Discord Guild add the bot via link: https://discord.com/oauth2/authorize?client_id=1283029091993518110
-3) Now you can set up notifications from Discord Guild into your telegram chat:
-4) In Telegram chat with NotifierFrogsBot /add_channel NAME_OF_GUILD - all connections and disconnections to the voice channels will be tracking from this Guild
-5) /remove_channel - remove Guild from tracking
-6) You can add multiple guilds to track in one chat
-7) One guild can be tracked in multiple Telegram channels
+### Discord Bot Commands
+- **Voice Channel Tracking**: Automatically detects when users join or leave voice channels
+- **Scheduled Events**: Monitors creation and deletion of Discord scheduled events
+- **Multi-Guild Support**: Can track multiple Discord guilds simultaneously
 
-CREATE .env
+### Telegram Bot Commands
+- `/start` or `/help` - Display help information
+- `/add_channel [Guild_Name]` - Add a Discord guild to tracking in the current chat
+- `/remove_channel [Guild_Name]` - Remove a Discord guild from tracking
+- `/get_ip` - Get the current chat ID
 
-TOKEN_TG = "YOUR TELEGRAM BOT TOKEN"
+## File Structure
 
-TOKEN = "YOUR DISCORD BOT TOKEN"
+```
+├── notifier_ds.py          # Discord bot implementation
+├── notifier_tg.py          # Telegram bot implementation  
+├── main.py                 # Main entry point
+├── launch_ds.py            # Discord bot launcher
+├── docker-compose.yml      # Docker orchestration
+├── Dockerfile              # Docker image definition
+├── requirements.txt        # Python dependencies
+└── README.md              # This file
+```
 
-DATABASE_PW = "Your database password"
+## Setup
 
-PORT = "port"
+1. Create a `.env` file with:
+   ```
+   TOKEN_TG=your_telegram_bot_token
+   TOKEN=your_discord_bot_token
+   DATABASE_PW=your_database_password
+   PORT=5432
+   ```
 
-The bot is running on remote server, using AWS EC2
+2. Add the Discord bot to your guild using the OAuth2 link
+3. Start a chat with the Telegram bot and use `/add_channel [Guild_Name]`
 
+## Running
 
-SRH Software Engineering (part for Prof. Edlich)
+### Docker (Recommended)
+```bash
+docker-compose up -d
+```
 
-Requirements, pdf exported from Notion [Requirements](./.github/src/list_of_reqs.pdf)
+### Local Development
+```bash
+python main.py
+```
 
-Diagram of workflow [Workflow](.github/src/Diagram_of_app_relationships.pdf
-)
+## Architecture
 
-Diagram of Domains [Domain Chart](.github/src/Diagram_DDD_Domain_chart.pdf)
-
-Diagram of CORE [CORE](.github/src/CORE.pdf)
-
-ANA - Analysis [ANA](https://docs.google.com/document/d/1akZDDUQj42m6rsIwgWtXcwa8Xqfb6b6WYqKlHNzBW2w/edit?usp=sharing)
-
-Refactoring example 1:
-
-Delete the else after return and de-indent the code, the logic has not changed, but the time to exec is less now
-
-[Example](https://github.com/andrey-qrqm/notifier_ds_tg/commit/c5fa62ec4a5325bb89cf0a5e4ff52104d6520ed4)
-
-Refactoring example 2:
-
-I've got rid of unnecessary connection set-ups and set-downs. Rewrote as a function and dependencies to better mock-up ability
-
-[Example](https://github.com/andrey-qrqm/notifier_ds_tg/commit/4e69e2d704ea4dc804c0a612ab258b204da4f490)
-
-Build Management:
-
-The app is build using docker-compose as an orchestrator of multiple docker containers.
-The Docker compose approach was chosen because this is a multi-container application with the need to define
-Network and Volumes. Also it helps with further automatization.
-
-[docker-compose.yml](https://github.com/andrey-qrqm/notifier_ds_tg/blob/main/docker-compose.yml)
-
-CI/CD:
-
-I'm using the GitHub Actions Pipeline to automate Docker image build and push to the Docker Hub
-
-[docker-build-push.yml](https://github.com/andrey-qrqm/notifier_ds_tg/blob/main/.github/workflows/docker-build-push.yml)
-
-Unit Tests:
-
-Unit Tests are made onto two main application (Discord Webhook Server + Bot, and Telegram Webhook Server + Bot)
-Tests are made using pytest and unittest.mock
-
-[Notifier Discord Tests](https://github.com/andrey-qrqm/notifier_ds_tg/blob/main/test_notifier_ds.py)
-[Notifier Telegram Tests](https://github.com/andrey-qrqm/notifier_ds_tg/blob/main/test_notifier_tg.py)
-
-IDE used: PyCharm Community Edition 
-
-Favorite Short-Cuts:
-
-CTRL + SHIFT + UP (Down) - moving the lines or whole functions through code
-
-CTRL + ALT + M - Extract Method
-
-
-METRICS
-
-To check code-quality metrics I used the External Tool Pylint (The average rating of code is 7.0)\
-
-To check health of the app I've created personal metrics of delays between event and notification
-
-I've created a second PostgreSQL Table to write in records of timings. Then I'm using Prometheus and Grafana to 
-analyze these metrics.
-
-[Metrics.py](https://github.com/andrey-qrqm/notifier_ds_tg/blob/main/metrics.py)
-[prometheus.yml](https://github.com/andrey-qrqm/notifier_ds_tg/blob/main/prometheus.yml)
-
-
-Clean Code Development:
-
-I've implemented some principles of the clean code development in this project.
-The great example would be here [Example](https://github.com/andrey-qrqm/notifier_ds_tg/blob/main/notifier_ds.py#L102)
-Function record_discord_event() is following the principles of CCD:
-1) Readable naming
-2) Single responsibility
-3) Clarity The SQL query is clear and self-explanatory, with meaningful column names (event_id, discord_event_timestamp).
-4) Error-Handling through try-except block
-5) Minimalism
+- **Discord Bot**: Listens for voice state updates and scheduled event changes
+- **Telegram Bot**: Handles user commands and sends notifications
+- **PostgreSQL**: Stores tracking configurations and event metrics
+- **Docker**: Containerized deployment with docker-compose orchestration
