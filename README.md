@@ -64,5 +64,5 @@ python main.py
 
 - **Discord Bot**: Listens for voice state updates and scheduled event changes
 - **Telegram Bot**: Handles user commands and sends notifications
-- **PostgreSQL**: Stores tracking configurations and event metrics
+- **PostgreSQL**: Stores tracking configurations
 - **Docker**: Containerized deployment with docker-compose orchestration
