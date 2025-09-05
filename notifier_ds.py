@@ -7,7 +7,9 @@ import requests
 import uuid
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
-
+from quixstreams import Application
+from confluent_kafka import KafkaException
+import json
 # test 9
 
 logging.basicConfig(
@@ -27,6 +29,11 @@ print("Started")
 logging.info('notifier_ds is started')
 
 port = os.getenv('PORT')
+
+kafka_app = Application(
+    broker_address="localhost:9092",
+    loglevel="DEBUG",
+)
 
 
 def generate_event_id():
@@ -65,7 +72,7 @@ def check_nickname_not_none(member):
     return nickname
 
 
-def send_data(event_msg, url, discord_channel_name, conn, event_id):
+def send_data(event_msg, url, discord_channel_name, conn, event_id, is_join, data_type):
     list_tg_id = take_ids(discord_channel_name, conn)
     print(list_tg_id, '  ', list_tg_id[0][0])
     if not list_tg_id:
@@ -76,16 +83,35 @@ def send_data(event_msg, url, discord_channel_name, conn, event_id):
         data = {
             'chat_id': {int(tg_id)},
             'text': event_msg,
+            'is_join': is_join,
+            'data_type': data_type,
             'disable_notification': True
         }
-        try:
-            requests.post(url, data).json()
-            logging.info(f"Request successfully sent {data}")
-        except Exception as e:
-            logging.error(f"Request is not send, exception {e}")
 
-    telegram_notification_timestamp = datetime.utcnow()  # create a timestamp
-    #update_telegram_notification(conn, event_id, telegram_notification_timestamp)  # update a table for metric
+        if data_type == "message":
+            try:
+                with kafka_app.get_producer() as producer:
+                    logging.info(f"producer got data: {json.dumps(data)}")
+                    producer.produce(
+                        topic="notifications",
+                        key="message",
+                        value=json.dumps(data),
+                    )
+            except KafkaException as e:
+                logging.error(f"Kafka raised exception {e}")
+
+        if data_type == "event":
+            try:
+                with kafka_app.get_producer() as producer:
+                    logging.info(f"producer got data: {json.dumps(data)}")
+                    producer.produce(
+                        topic="notifications",
+                        key="event",
+                        value=json.dumps(data),
+                    )
+            except KafkaException as e:
+                logging.error(f"Kafka raised exception {e}")
+
 
 
 def take_ids(discord_channel_name, conn):
@@ -191,34 +217,31 @@ def run_discord_bot():
         discord_channel_name = str(member.guild)
         if not before.channel and after.channel:
             conn = db_connect()  # On this conn
-            discord_event_timestamp = datetime.utcnow()  # Take current time
             event_id = generate_event_id()  # Generate unique Event Id
-
-            #record_discord_event(conn, event_id, discord_event_timestamp)  # Make a record in the delays db
 
             user_trigger = str(check_nickname_not_none(member))
             logging.info(f"user joined: {user_trigger}")
-
+            is_join = 't' #user join flag
+            data_type = "message" # will send to a message topic
             event_msg = user_trigger + ' joined the channel ' + str(after.channel)  # create an output
             logging.info(f"event_msg created: {event_msg}")
-            send_data(event_msg, URL, discord_channel_name, conn, event_id)  # Call func to send data on tg
+            send_data(event_msg, URL, discord_channel_name, conn, event_id, is_join, data_type)  # Call func to send data on tg
             print(member.guild)
             conn.commit()
             conn.close()
 
         elif before.channel and not after.channel:
             conn = db_connect()  # On this conn
-            discord_event_timestamp = datetime.utcnow()  # Take current time
             event_id = generate_event_id()  # Generate unique Event Id
 
-            #record_discord_event(conn, event_id, discord_event_timestamp)  # Make a record in the delays db
-
+            is_join = 'f' #user join flag false
+            data_type = "message"
             user_trigger = str(check_nickname_not_none(member)) # Nickname/Name of user who left channel
             logging.info(f"user left: {user_trigger}")
 
             event_msg = user_trigger + ' left the channel ' + str(before.channel)  # create an output
             logging.info(f"event_msg created: {event_msg}")
-            send_data(event_msg, URL, discord_channel_name, conn, event_id)  # Call func to send data on tg
+            send_data(event_msg, URL, discord_channel_name, conn, event_id, is_join, data_type)  # Call func to send data on tg
             print(member.guild)
             conn.commit()
             conn.close()
@@ -231,7 +254,7 @@ def run_discord_bot():
         event_time = (event.start_time + timedelta(hours=3)).strftime("%d %B, %H:%M")
         event_message = f"**{event.name}** in {event.guild}. Start - **{event_time}**"
         event_id = generate_event_id()  # Generate unique Event Id
-        send_data(event_message, URL, str(event.guild), conn, event_id)
+        send_data(event_message, URL, str(event.guild), conn, event_id, is_join='t', data_type="event")
         logging.info(f"send data - {event_message} to {event.guild}")
         conn.commit()
         conn.close()
@@ -243,7 +266,7 @@ def run_discord_bot():
         event_time = (event.start_time + timedelta(hours=3)).strftime("%d %B, %H:%M")
         event_message = f"**{event.name}** in {event.guild}. Start - **{event_time}** IS DELETED"
         event_id = generate_event_id()  # Generate unique Event Id
-        send_data(event_message, URL, str(event.guild), conn, event_id)
+        send_data(event_message, URL, str(event.guild), conn, event_id, is_join='f', data_type="event")
         logging.info(f"send data - {event_message} to {event.guild}")
         conn.commit()
         conn.close()
