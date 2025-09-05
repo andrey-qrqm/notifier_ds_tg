@@ -81,7 +81,7 @@ def send_data(event_msg, url, discord_channel_name, conn, event_id, is_join, dat
     for tg_id in list_tg_id[0][0]:
         print(tg_id)
         data = {
-            'chat_id': {int(tg_id)},
+            'chat_id': int(tg_id),
             'text': event_msg,
             'is_join': is_join,
             'data_type': data_type,
