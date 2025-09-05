@@ -31,7 +31,7 @@ logging.info('notifier_ds is started')
 port = os.getenv('PORT')
 
 kafka_app = Application(
-    broker_address="localhost:9092",
+    broker_address="kafka:9092",
     loglevel="DEBUG",
 )
 

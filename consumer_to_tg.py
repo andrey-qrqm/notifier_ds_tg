@@ -11,7 +11,7 @@ load_dotenv()
 TOKEN_TG = os.getenv('TOKEN_TG')
 
 app = Application(
-    broker_address="localhost:9092",
+    broker_address="kafka:9092",
     loglevel="DEBUG",
     consumer_group="event_reader",
 )
