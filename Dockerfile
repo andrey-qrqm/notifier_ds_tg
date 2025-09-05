@@ -9,6 +9,7 @@ COPY requirements.txt /app/requirements.txt
 
 COPY main.py /app/launch_tg.py
 COPY notifier_tg.py /app/notifier_tg.py
+COPY consumer_to_tg.py /app/consumer_to_tg.py
 
 COPY launch_ds.py /app/launch_ds.py
 COPY notifier_ds.py /app/notifier_ds.py
