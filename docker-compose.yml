@@ -52,20 +52,16 @@ services:
       - db
 
 
-  app_metrics:
+  app_consumer:
     build: .
     networks:
       - app_network
     env_file:
       - .env
-    environment:
-      - DATABASE_PW=${DATABASE_PW}  # Pass the database password
-      - DATABASE_URL=postgresql://postgres:${DATABASE_PW}@db:5432/dbname  # PostgreSQL connection string
-    command: [ "python", "metrics.py" ]  # Launch the metrics.py script
+    command: [ "python3", "consumer_to_tg.py" ]  # Launch the metrics.py script
     depends_on:
       - db
-    ports:
-      - "8000:8000"  # Expose Prometheus metrics endpoint on port 8000
+
 
 
 volumes:
