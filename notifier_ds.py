@@ -20,8 +20,8 @@ logging.basicConfig(
 
 load_dotenv()
 TOKEN_TG = os.getenv('TOKEN_TG')
-CHAT_ID = os.getenv('CHAT_ID')
-TOPIC_ID = os.getenv('TOPIC_ID')
+CHAT_ID = int(os.getenv('CHAT_ID'))
+TOPIC_ID = int(os.getenv('TOPIC_ID'))
 intents = discord.Intents.all()
 URL = f'https://api.telegram.org/bot{TOKEN_TG}/sendMessage'
 
