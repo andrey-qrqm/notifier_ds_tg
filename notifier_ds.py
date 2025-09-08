@@ -21,6 +21,7 @@ logging.basicConfig(
 load_dotenv()
 TOKEN_TG = os.getenv('TOKEN_TG')
 CHAT_ID = os.getenv('CHAT_ID')
+TOPIC_ID = os.getenv('TOPIC_ID')
 intents = discord.Intents.all()
 URL = f'https://api.telegram.org/bot{TOKEN_TG}/sendMessage'
 
@@ -80,13 +81,24 @@ def send_data(event_msg, url, discord_channel_name, conn, event_id, is_join, dat
         return
     for tg_id in list_tg_id[0][0]:
         print(tg_id)
-        data = {
-            'chat_id': int(tg_id),
-            'text': event_msg,
-            'is_join': is_join,
-            'data_type': data_type,
-            'disable_notification': True
-        }
+        if int(tg_id) == CHAT_ID:
+            data = {
+                'chat_id': int(tg_id),
+                'topic_id': TOPIC_ID,
+                'text': event_msg,
+                'is_join': is_join,
+                'data_type': data_type,
+                'disable_notification': True
+            }
+        else:
+            data = {
+                'chat_id': int(tg_id),
+                'topic_id': None,
+                'text': event_msg,
+                'is_join': is_join,
+                'data_type': data_type,
+                'disable_notification': True
+            }
 
         if data_type == "message":
             try:
