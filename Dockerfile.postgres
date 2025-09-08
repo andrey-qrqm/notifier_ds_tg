@@ -1,0 +1,15 @@
+FROM postgres:15
+
+# Copy any custom initialization scripts if needed
+# COPY init.sql /docker-entrypoint-initdb.d/
+
+# Expose PostgreSQL port
+EXPOSE 5432
+
+# Set environment variables (can be overridden at runtime)
+ENV POSTGRES_USER=postgres
+ENV POSTGRES_DB=postgres
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+  CMD pg_isready -U postgres || exit 1

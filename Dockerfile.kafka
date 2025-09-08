@@ -1,0 +1,9 @@
+FROM confluentinc/cp-kafka:7.5.0
+
+# Expose Kafka ports
+EXPOSE 9092
+EXPOSE 29092
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=30s --start-period=60s --retries=3 \
+    CMD kafka-topics --bootstrap-server localhost:9092 --list || exit 1

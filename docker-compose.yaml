@@ -1,0 +1,45 @@
+version: '3.8'
+
+networks:
+  app_network:
+    external: true
+    name: app_network
+
+services:
+  app1:
+    build: .
+    networks:
+      - app_network
+    env_file:
+      - .env
+    environment:
+      - DATABASE_PW=${DATABASE_PW}
+      - PORT=5432
+      - DATABASE_URL=postgresql://postgres:${DATABASE_PW}@db:5432/postgres
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092  # Add Kafka connection info
+    command: ["python", "launch_tg.py", "-r", "requirements.txt"]
+
+
+  app2:
+    build: .
+    networks:
+      - app_network
+    env_file:
+      - .env
+    environment:
+      - DATABASE_PW=${DATABASE_PW}
+      - PORT=5432
+      - DATABASE_URL=postgresql://postgres:${DATABASE_PW}@db:5432/postgres
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092  # Add Kafka connection info
+    command: ["python", "launch_ds.py", "-r", "requirements.txt"]
+
+
+  app_consumer:
+    build: .
+    networks:
+      - app_network
+    env_file:
+      - .env
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092  # Add Kafka connection info
+    command: ["python3", "consumer_to_tg.py"]
