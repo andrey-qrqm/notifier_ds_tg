@@ -29,7 +29,7 @@ def conn_check():
     db_password = remove_spaces(db_password)
     try:
         conn = psycopg2.connect(
-            host="db",
+            host="standalone-postgres",
             dbname="postgres",
             user="postgres",
             password=db_password,
@@ -47,7 +47,7 @@ def db_connect():
     # Connect to the db
     db_password = os.getenv('DATABASE_PW')
     conn = psycopg2.connect(
-        host="db",
+        host="standalone-postgres",
         dbname="postgres",
         user="postgres",
         password=db_password,
@@ -80,7 +80,7 @@ async def send_ip(message):
 def create_database_conn():
     global conn, cur
     conn = psycopg2.connect(
-        host="db",
+        host="standalone-postgres",
         dbname="postgres",
         user="postgres",
         password=db_password,
