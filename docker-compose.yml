@@ -53,16 +53,13 @@ services:
     networks:
       - app_network
     command: >
-      bash -c "
-        kafka-topics --create
-          --if-not-exists
-          --topic notifications
-          --partitions 1
-          --replication-factor 1
-          --bootstrap-server kafka:9092 &&
-        echo 'Topic created: notifications' &&
-        sleep infinity
-      "
+      bash -c "kafka-topics --create --if-not-exists --topic notifications --partitions 1 --replication-factor 1 --bootstrap-server kafka:9092"
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server kafka:9092 --list | grep -q notifications"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: "no"
 
   app1:
     build: .
@@ -103,9 +100,8 @@ services:
       - .env
     command: [ "python3", "consumer_to_tg.py" ]  # Launch the metrics.py script
     depends_on:
-      - db
-      - kafka-init
-
+      kafka-init:
+        condition: service_healthy
 
 
 volumes:
