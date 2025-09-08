@@ -46,6 +46,24 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
 
+  kafka-init:
+    image: confluentinc/cp-kafka:7.5.0
+    depends_on:
+      - kafka
+    networks:
+      - app_network
+    command: >
+      bash -c "
+        kafka-topics --create
+          --if-not-exists
+          --topic notifications
+          --partitions 1
+          --replication-factor 1
+          --bootstrap-server kafka:9092 &&
+        echo 'Topic created: notifications' &&
+        sleep infinity
+      "
+
   app1:
     build: .
     networks:
@@ -74,6 +92,7 @@ services:
     command: ["python", "launch_ds.py",  "-r requirements.txt"]
     depends_on:
       - db
+      - kafka-init
 
 
   app_consumer:
@@ -85,6 +104,7 @@ services:
     command: [ "python3", "consumer_to_tg.py" ]  # Launch the metrics.py script
     depends_on:
       - db
+      - kafka-init
 
 
 
