@@ -73,7 +73,7 @@ def check_nickname_not_none(member):
     return nickname
 
 
-def send_data(event_msg, url, discord_channel_name, conn, event_id, is_join, data_type):
+def send_data(event_msg, discord_channel_name, conn, username, is_join, data_type):
     list_tg_id = take_ids(discord_channel_name, conn)
     print(list_tg_id, '  ', list_tg_id[0][0])
     if not list_tg_id:
@@ -87,6 +87,7 @@ def send_data(event_msg, url, discord_channel_name, conn, event_id, is_join, dat
                 'chat_id': int(tg_id),
                 'message_thread_id': TOPIC_ID,
                 'text': event_msg,
+                'username': username,
                 'is_join': is_join,
                 'data_type': data_type,
                 'disable_notification': True
@@ -97,6 +98,7 @@ def send_data(event_msg, url, discord_channel_name, conn, event_id, is_join, dat
                 'chat_id': int(tg_id),
                 'topic_id': None,
                 'text': event_msg,
+                'username': username,
                 'is_join': is_join,
                 'data_type': data_type,
                 'disable_notification': True
@@ -231,22 +233,20 @@ def run_discord_bot():
         discord_channel_name = str(member.guild)
         if not before.channel and after.channel and not member.bot:
             conn = db_connect()  # On this conn
-            event_id = generate_event_id()  # Generate unique Event Id
-
             user_trigger = str(check_nickname_not_none(member))
+
             logging.info(f"user joined: {user_trigger}")
             is_join = 't' #user join flag
             data_type = "message" # will send to a message topic
             event_msg = user_trigger + ' joined the channel ' + str(after.channel)  # create an output
             logging.info(f"event_msg created: {event_msg}")
-            send_data(event_msg, URL, discord_channel_name, conn, event_id, is_join, data_type)  # Call func to send data on tg
+            send_data(event_msg, discord_channel_name, conn, user_trigger, is_join, data_type)  # Call func to send data on tg
             print(member.guild)
             conn.commit()
             conn.close()
 
         elif before.channel and not after.channel and not member.bot:
             conn = db_connect()  # On this conn
-            event_id = generate_event_id()  # Generate unique Event Id
 
             is_join = 'f' #user join flag false
             data_type = "message"
@@ -255,7 +255,7 @@ def run_discord_bot():
 
             event_msg = user_trigger + ' left the channel ' + str(before.channel)  # create an output
             logging.info(f"event_msg created: {event_msg}")
-            send_data(event_msg, URL, discord_channel_name, conn, event_id, is_join, data_type)  # Call func to send data on tg
+            send_data(event_msg, discord_channel_name, conn, user_trigger, is_join, data_type)  # Call func to send data on tg
             print(member.guild)
             conn.commit()
             conn.close()
@@ -268,7 +268,7 @@ def run_discord_bot():
         event_time = (event.start_time + timedelta(hours=3)).strftime("%d %B, %H:%M")
         event_message = f"**{event.name}** in {event.guild}. Start - **{event_time}**"
         event_id = generate_event_id()  # Generate unique Event Id
-        send_data(event_message, URL, str(event.guild), conn, event_id, is_join='t', data_type="event")
+        send_data(event_message, str(event.guild), conn, "event", is_join='t', data_type="event")
         logging.info(f"send data - {event_message} to {event.guild}")
         conn.commit()
         conn.close()
@@ -280,7 +280,7 @@ def run_discord_bot():
         event_time = (event.start_time + timedelta(hours=3)).strftime("%d %B, %H:%M")
         event_message = f"**{event.name}** in {event.guild}. Start - **{event_time}** IS DELETED"
         event_id = generate_event_id()  # Generate unique Event Id
-        send_data(event_message, URL, str(event.guild), conn, event_id, is_join='f', data_type="event")
+        send_data(event_message, str(event.guild), conn, "event", is_join='f', data_type="event")
         logging.info(f"send data - {event_message} to {event.guild}")
         conn.commit()
         conn.close()
