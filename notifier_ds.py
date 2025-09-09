@@ -92,7 +92,7 @@ def send_data(event_msg, url, discord_channel_name, conn, event_id, is_join, dat
                 'disable_notification': True
             }
         else:
-            logging.info(f"chat id: {int(tg_id)}, Required for topics: {CHAT_ID}, topic = {TOPIC_ID}")
+            logging.info(f"chat id: {int(tg_id)}, Required for topics: {CHAT_ID}")
             data = {
                 'chat_id': int(tg_id),
                 'topic_id': None,
