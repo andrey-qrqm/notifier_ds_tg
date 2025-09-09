@@ -229,7 +229,7 @@ def run_discord_bot():
     async def on_voice_state_update(member, before, after):
         # Event of joining and leaving:
         discord_channel_name = str(member.guild)
-        if not before.channel and after.channel:
+        if not before.channel and after.channel and not member.bot:
             conn = db_connect()  # On this conn
             event_id = generate_event_id()  # Generate unique Event Id
 
@@ -244,7 +244,7 @@ def run_discord_bot():
             conn.commit()
             conn.close()
 
-        elif before.channel and not after.channel:
+        elif before.channel and not after.channel and not member.bot:
             conn = db_connect()  # On this conn
             event_id = generate_event_id()  # Generate unique Event Id
 
