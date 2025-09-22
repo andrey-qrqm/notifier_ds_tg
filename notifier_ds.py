@@ -104,30 +104,16 @@ def send_data(event_msg, discord_channel_name, conn, username, is_join, data_typ
                 'disable_notification': True
             }
 
-        if data_type == "message":
-            try:
-                with kafka_app.get_producer() as producer:
-                    logging.info(f"producer got data: {json.dumps(data)}")
-                    producer.produce(
-                        topic="notifications",
-                        key="message",
-                        value=json.dumps(data),
-                    )
-            except KafkaException as e:
-                logging.error(f"Kafka raised exception {e}")
-
-        if data_type == "event":
-            try:
-                with kafka_app.get_producer() as producer:
-                    logging.info(f"producer got data: {json.dumps(data)}")
-                    producer.produce(
-                        topic="notifications",
-                        key="event",
-                        value=json.dumps(data),
-                    )
-            except KafkaException as e:
-                logging.error(f"Kafka raised exception {e}")
-
+        try:
+            with kafka_app.get_producer() as producer:
+                logging.info(f"producer got data: {json.dumps(data)}")
+                producer.produce(
+                    topic="notifications",
+                    key=data_type,
+                    value=json.dumps(data),
+                )
+        except KafkaException as e:
+            logging.error(f"Kafka raised exception {e}")
 
 
 def take_ids(discord_channel_name, conn):
