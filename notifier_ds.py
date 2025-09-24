@@ -96,7 +96,7 @@ def send_data(event_msg, discord_channel_name, conn, username, is_join, data_typ
             logging.info(f"chat id: {int(tg_id)}, Required for topics: {CHAT_ID}")
             data = {
                 'chat_id': int(tg_id),
-                'topic_id': None,
+                'message_thread_id': None,
                 'text': event_msg,
                 'username': username,
                 'is_join': is_join,
