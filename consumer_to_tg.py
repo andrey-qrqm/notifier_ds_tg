@@ -7,6 +7,26 @@ import asyncio
 from dotenv import load_dotenv
 import os
 
+
+def value_to_data(value):
+    data = {'chat_id': value['chat_id'], 'text': value['text']}
+    message_thread_id = value.get('message_thread_id')
+    if message_thread_id is not None:
+        data['message_thread_id'] = message_thread_id
+    return data
+
+
+def send_data(value):
+    if value["chat_id"] is not None:
+        data = value_to_data(value)
+        logging.info(f"Sending {data['text']} to {data['chat_id']}")
+        URL = f'https://api.telegram.org/bot{TOKEN_TG}/sendMessage'
+        requests.post(URL, data).json()
+        logging.info(f"POST sent")
+    else:
+        logging.error(f"value does not have a chat_id {value}")
+
+
 load_dotenv()
 TOKEN_TG = os.getenv('TOKEN_TG')
 
@@ -17,7 +37,7 @@ app = Application(
 )
 try:
     with app.get_consumer() as consumer:
-        consumer.subscribe(["notifications"])
+        consumer.subscribe(["notifications", "logs"])
 
         while True:
             msg = consumer.poll(1)
@@ -27,27 +47,18 @@ try:
             elif msg.error() is not None:
                 raise Exception(msg.error())
             else:
-                key = msg.key().decode('utf-8')
+                key = msg.key().decode('utf-8') if msg.key() else None
                 value = json.loads(msg.value())
                 offset = msg.offset()
-                print(f"{offset, key, value}")
-                if key == "message":
-                    if value["chat_id"] is not None:
-                        logging.info(f"Sending {value['text']} to {value['chat_id']}")
-                        URL = f'https://api.telegram.org/bot{TOKEN_TG}/sendMessage'
-                        requests.post(URL, value).json()
-                        logging.info(f"POST sent")
-                    else:
-                        logging.error(f"value does not have a chat_id {value}")
+                logging.info(f"{offset, key, value}")
+                if msg.topic() == "notifications":
+                    if key in ("message", "event"):
+                        send_data(value)
+                    # Here should be the anti-spam logic
+                if msg.topic() == "logs":
+                    if key == "logs":
+                        send_data(value)
 
-                if key == "event":
-                    if value["chat_id"] is not None:
-                        logging.info(f"Sending {value['text']} to {value['chat_id']}")
-                        URL = f'https://api.telegram.org/bot{TOKEN_TG}/sendMessage'
-                        requests.post(URL, value).json()
-                        logging.info(f"POST sent")
-                    else:
-                        logging.error(f"value does not have a chat_id {value}")
 
 except KafkaException as e:
     logging.error(f"Kafka has raised exception {e}")
