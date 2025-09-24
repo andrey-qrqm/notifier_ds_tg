@@ -8,9 +8,6 @@ case "$1" in
         echo "Starting standalone Kafka..."
         ./start-kafka.sh
         
-        echo "Initializing Kafka topics..."
-        ./init-kafka.sh
-        
         echo "Starting other services..."
         docker-compose up -d
         ;;
