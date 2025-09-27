@@ -53,10 +53,12 @@ try:
                 logging.info(f"{offset, key, value}")
                 if msg.topic() == "notifications":
                     if key in ("message", "event"):
+                        logging.info(f"message {value}, key {key}, message topic - {msg.topic()}")
                         send_data(value)
                     # Here should be the anti-spam logic
                 if msg.topic() == "logs":
                     if key == "logs":
+                        logging.info(f"message {value}, key {key}, message topic - {msg.topic()}")
                         send_data(value)
 
 
