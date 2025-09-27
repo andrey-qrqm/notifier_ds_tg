@@ -7,6 +7,12 @@ import asyncio
 from dotenv import load_dotenv
 import os
 
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    force=True
+)
+
 
 def value_to_data(value):
     data = {'chat_id': value['chat_id'], 'text': value['text']}
