@@ -189,9 +189,9 @@ def run_discord_bot():
 
             content = {
                 "message": event_msg,
-                "event_id": generate_event_id()  # Generate unique Event Id
-                "is_join": 't', #user join flag
-                "data_type": "message" # will send to a message topic
+                "event_id": generate_event_id(), 
+                "is_join": 't', 
+                "data_type": "message"
             }
             message = Message(content, discord_channel_name, URL)
 
@@ -209,9 +209,9 @@ def run_discord_bot():
 
             content = {
                 "message": event_msg,
-                "event_id": generate_event_id()  # Generate unique Event Id
-                "is_join": 'f', #user join flag
-                "data_type": "message" # will send to a message topic
+                "event_id": generate_event_id(),
+                "is_join": 'f',
+                "data_type": "message"
             }
             message = Message(content, discord_channel_name, URL)
             
@@ -229,9 +229,9 @@ def run_discord_bot():
         event_message = f"**{event.name}** in {event.guild}. Start - **{event_time}**"
         content = {
                 "message": event_msg,
-                "event_id": generate_event_id()  # Generate unique Event Id
-                "is_join": 't', #event join flag
-                "data_type": "event" # will send to a message topic
+                "event_id": generate_event_id(),
+                "is_join": 't',
+                "data_type": "event"
             }
         message = Message(content, event.guild, URL)
         send_data(message)
@@ -247,9 +247,9 @@ def run_discord_bot():
         event_message = f"**{event.name}** in {event.guild}. Start - **{event_time}** IS DELETED"
         content = {
                 "message": event_message,
-                "event_id": generate_event_id()  # Generate unique Event Id
-                "is_join": 'f', #event join flag
-                "data_type": "event" # will send to a message topic
+                "event_id": generate_event_id(),
+                "is_join": 'f',
+                "data_type": "event"
             }
         message = Message(content, event.guild, URL)
         send_data(message)
