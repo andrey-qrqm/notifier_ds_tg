@@ -8,7 +8,7 @@ networks:
 
 services:
   db:
-    image: postgres
+    image: postgres:15
     networks:
       - app_network
     environment:
