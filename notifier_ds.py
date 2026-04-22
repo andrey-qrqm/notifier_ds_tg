@@ -78,7 +78,7 @@ def check_nickname_not_none(member):
     return nickname
 
 
-def send_data(message: Message):
+def send_data(message: Message, conn: psycopg2.extensions.connection):
     list_tg_id = take_ids(message.channel, conn)
     
     if not list_tg_id:
@@ -195,7 +195,7 @@ def run_discord_bot():
             }
             message = Message(content, discord_channel_name, URL)
 
-            send_data(message)  # Call func to send data on tg
+            send_data(message, conn)  # Call func to send data on tg
             conn.commit()
             conn.close()
 
@@ -215,7 +215,7 @@ def run_discord_bot():
             }
             message = Message(content, discord_channel_name, URL)
             
-            send_data(message)  # Call func to send data on tg
+            send_data(message, conn)  # Call func to send data on tg
             conn.commit()
             conn.close()
 
@@ -234,7 +234,7 @@ def run_discord_bot():
                 "data_type": "event"
             }
         message = Message(content, event.guild, URL)
-        send_data(message)
+        send_data(message, conn)
         logging.info(f"send data - {event_message} to {event.guild}")
         conn.commit()
         conn.close()
@@ -252,7 +252,7 @@ def run_discord_bot():
                 "data_type": "event"
             }
         message = Message(content, event.guild, URL)
-        send_data(message)
+        send_data(message, conn)
         logging.info(f"send data - {event_message} to {event.guild}")
         conn.commit()
         conn.close()
