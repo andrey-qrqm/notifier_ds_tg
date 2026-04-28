@@ -9,12 +9,15 @@ import os
 
 load_dotenv()
 TOKEN_TG = os.getenv('TOKEN_TG')
+URL = f'https://api.telegram.org/bot{TOKEN_TG}/sendMessage'
 
 app = Application(
     broker_address="kafka:9092",
     loglevel="DEBUG",
     consumer_group="event_reader",
 )
+
+
 try:
     with app.get_consumer() as consumer:
         consumer.subscribe(["notifications"])
@@ -34,7 +37,6 @@ try:
                 if key == "message":
                     if value["chat_id"] is not None:
                         logging.info(f"Sending {value['text']} to {value['chat_id']}")
-                        URL = f'https://api.telegram.org/bot{TOKEN_TG}/sendMessage'
                         requests.post(URL, value).json()
                         logging.info(f"POST sent")
                     else:
@@ -43,7 +45,6 @@ try:
                 if key == "event":
                     if value["chat_id"] is not None:
                         logging.info(f"Sending {value['text']} to {value['chat_id']}")
-                        URL = f'https://api.telegram.org/bot{TOKEN_TG}/sendMessage'
                         requests.post(URL, value).json()
                         logging.info(f"POST sent")
                     else:
