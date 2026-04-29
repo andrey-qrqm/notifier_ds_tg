@@ -158,7 +158,7 @@ async def add_channel(message):
             ON CONFLICT (DISCORD_ID)  -- If DISCORD_ID already exists
             DO UPDATE
             SET tg_chat_id = CASE
-                WHEN NOT ARRAY[%s]::BIGINT[] <@ tracking.tg_chat_id THEN tracking.tg_chat_id || %s
+                WHEN NOT ARRAY[%s]::BIGINT[] <@ tracking.tg_chat_id THEN tracking.tg_chat_id || ARRAY[%s]::BIGINT[]  -- Append new chat_id if it's not already in the array
                 ELSE tracking.tg_chat_id
             END;
         """, (channel, chat_id, chat_id, chat_id))
