@@ -152,16 +152,16 @@ async def add_channel(message):
         logging.info(f"channel {channel} is found in existing guilds")
         print(channel)
         logging.info(f"Adding channel {channel} for chat ID {chat_id}")
-        cur.execute(f"""
+        cur.execute("""
             INSERT INTO tracking (DISCORD_ID, tg_chat_id)
-            VALUES ('{channel}', ARRAY[{chat_id}]::BIGINT[])  -- Insert new DISCORD_ID with initial tg_chat_id array
+            VALUES (%s, ARRAY[%s]::BIGINT[])  -- Insert new DISCORD_ID with initial tg_chat_id array
             ON CONFLICT (DISCORD_ID)  -- If DISCORD_ID already exists
             DO UPDATE
             SET tg_chat_id = CASE
-                WHEN NOT ARRAY[{chat_id}]::BIGINT[] <@ tracking.tg_chat_id THEN tracking.tg_chat_id || {chat_id}
+                WHEN NOT ARRAY[%s]::BIGINT[] <@ tracking.tg_chat_id THEN tracking.tg_chat_id || %s
                 ELSE tracking.tg_chat_id
             END;
-        """)
+        """, (channel, chat_id, chat_id, chat_id))
 
         conn.commit()  # Commit the insert/update operation
 
@@ -184,15 +184,15 @@ async def remove_channel(message):
     logging.info(f"Removing channel {channel} for chat ID {chat_id}")
 
     # SQL query to delete the chat ID from the tg_chat_id array
-    cur.execute(f"""
+    cur.execute("""
         UPDATE tracking
         SET tg_chat_id = ARRAY(
             SELECT unnest(tg_chat_id)
             EXCEPT
-            SELECT {chat_id}::BIGINT
+            SELECT %s::BIGINT
         )
-        WHERE DISCORD_ID = '{channel}' AND {chat_id}::BIGINT = ANY(tg_chat_id);
-    """)
+        WHERE DISCORD_ID = %s AND %s::BIGINT = ANY(tg_chat_id);
+    """, (chat_id, channel, chat_id))
 
     conn.commit()  # Commit the update operation
 
