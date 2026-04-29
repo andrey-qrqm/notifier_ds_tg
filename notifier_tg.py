@@ -95,10 +95,11 @@ def create_database_conn():
 
     CREATE TABLE IF NOT EXISTS discord_sessions (
         session_id UUID PRIMARY KEY,
-        username TEXT NOT NULL,
+        user_id TEXT NOT NULL,
         DISCORD_ID TEXT NOT NULL,
-        session_start TIMESTAMP NOT NULL,
-        session_end TIMESTAMP
+        session_start TIMESTAMPTZ NOT NULL,
+        session_end TIMESTAMPTZ
+        );
     """
     )
 
