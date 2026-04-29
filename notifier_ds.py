@@ -42,7 +42,15 @@ class Message():
         self.channel = channel
         self.destination = destination
 
-def generate_event_id():
+class Session():
+    def __init__(self, session_id, username, DISCORD_ID, session_start, session_end=None):
+        self.session_id = session_id
+        self.username = username
+        self.DISCORD_ID = DISCORD_ID
+        self.session_start = session_start
+        self.session_end = session_end
+
+def generate_uuid():
     return str(uuid.uuid4())
 
 
@@ -119,6 +127,23 @@ def send_data(message: Message, conn: psycopg2.extensions.connection):
             logging.error(f"Kafka raised exception {e}")
 
 
+def add_session_to_db(session: Session, conn: psycopg2.extensions.connection):
+    cur = conn.cursor()
+    cur.execute(f"""
+        INSERT INTO discord_sessions (session_id, username, DISCORD_ID, session_start, session_end)
+        VALUES (%s, %s, %s, %s, %s)
+    """, (session.session_id, session.username, session.DISCORD_ID, session.session_start, session.session_end))
+    conn.commit()
+
+def stop_session_in_db(session_id: str, conn: psycopg2.extensions.connection):
+    cur = conn.cursor()
+    cur.execute(f"""
+        UPDATE discord_sessions
+        SET session_end = %s
+        WHERE session_id = %s AND session_end IS NULL
+    """, (datetime.now(), session_id))
+    conn.commit()
+
 def take_ids(discord_channel_name, conn):
     cur = conn.cursor()
     logging.info(f"discord_channel_name = {discord_channel_name}")
@@ -148,6 +173,7 @@ def run_discord_bot():
     global intents
     token = os.getenv('TOKEN')
     client = discord.Client(intents=intents)
+    ActiveSessions = {}
 
     @client.event
     async def on_ready():
@@ -186,10 +212,19 @@ def run_discord_bot():
             logging.info(f"user joined: {user_trigger}")
             event_msg = user_trigger + ' joined the channel ' + str(after.channel)  # create an output
             logging.info(f"event_msg created: {event_msg}")
+            
+            session = Session(
+                generate_uuid(),
+                user_trigger,
+                member.id,
+                datetime.now()
+            )
+            ActiveSessions[session.username] = session.session_id
+            add_session_to_db(session, conn)
 
             content = {
                 "message": event_msg,
-                "event_id": generate_event_id(), 
+                "event_id": generate_uuid(), 
                 "is_join": 't', 
                 "data_type": "message"
             }
@@ -209,10 +244,15 @@ def run_discord_bot():
 
             content = {
                 "message": event_msg,
-                "event_id": generate_event_id(),
+                "event_id": generate_uuid(),
                 "is_join": 'f',
                 "data_type": "message"
             }
+            session_id = ActiveSessions.get(user_trigger)
+            if session_id:
+                stop_session_in_db(session_id, conn)
+                ActiveSessions.pop(user_trigger, None)
+
             message = Message(content, discord_channel_name, URL)
             
             send_data(message, conn)  # Call func to send data on tg
@@ -223,13 +263,12 @@ def run_discord_bot():
     @client.event
     async def on_scheduled_event_create(event):
         logging.info(f"event {event.name} has been created, guild = {event.guild}, channel = {event.channel}")
-        
         conn = db_connect()  
         event_time = (event.start_time + timedelta(hours=3)).strftime("%d %B, %H:%M")
         event_message = f"**{event.name}** in {event.guild}. Start - **{event_time}**"
         content = {
                 "message": event_msg,
-                "event_id": generate_event_id(),
+                "event_id": generate_uuid(),
                 "is_join": 't',
                 "data_type": "event"
             }
@@ -247,7 +286,7 @@ def run_discord_bot():
         event_message = f"**{event.name}** in {event.guild}. Start - **{event_time}** IS DELETED"
         content = {
                 "message": event_message,
-                "event_id": generate_event_id(),
+                "event_id": generate_uuid(),
                 "is_join": 'f',
                 "data_type": "event"
             }
