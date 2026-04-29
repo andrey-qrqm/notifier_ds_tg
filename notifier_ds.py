@@ -185,17 +185,18 @@ def run_discord_bot():
     global intents
     token = os.getenv('TOKEN')
     client = discord.Client(intents=intents)
-    ActiveSessions = load_active_sessions(conn)
-
-    if not ActiveSessions:
-        logging.info("No active sessions found in the database.")
-    else:
-        logging.info(f"Active sessions loaded: {ActiveSessions}")
 
     @client.event
     async def on_ready():
         logging.info(f"{client.user} is now running")
         conn = db_connect()
+        ActiveSessions = load_active_sessions(conn)
+
+        if not ActiveSessions:
+            logging.info("No active sessions found in the database.")
+        else:
+            logging.info(f"Active sessions loaded: {ActiveSessions}")
+
         await get_existing_guilds(conn)
 
     async def get_existing_guilds(db_connection) -> list[str]:
