@@ -6,7 +6,7 @@ import discord
 import requests
 import uuid
 
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
 from quixstreams import Application
 from confluent_kafka import KafkaException
@@ -43,9 +43,9 @@ class Message():
         self.destination = destination
 
 class Session():
-    def __init__(self, session_id, username, DISCORD_ID, session_start, session_end=None):
+    def __init__(self, session_id, user_id, DISCORD_ID, session_start, session_end=None):
         self.session_id = session_id
-        self.username = username
+        self.user_id = user_id
         self.DISCORD_ID = DISCORD_ID
         self.session_start = session_start
         self.session_end = session_end
@@ -129,25 +129,37 @@ def send_data(message: Message, conn: psycopg2.extensions.connection):
 
 def add_session_to_db(session: Session, conn: psycopg2.extensions.connection):
     cur = conn.cursor()
-    cur.execute(f"""
-        INSERT INTO discord_sessions (session_id, username, DISCORD_ID, session_start, session_end)
+    cur.execute("""
+        INSERT INTO discord_sessions (session_id, user_id, DISCORD_ID, session_start, session_end)
         VALUES (%s, %s, %s, %s, %s)
-    """, (session.session_id, session.username, session.DISCORD_ID, session.session_start, session.session_end))
+    """, (session.session_id, session.user_id, session.DISCORD_ID, session.session_start, session.session_end))
+    logging.info(f"Session {session.session_id} added to DB for user {session.user_id} in channel {session.DISCORD_ID} at {session.session_start}")
     conn.commit()
 
 def stop_session_in_db(session_id: str, conn: psycopg2.extensions.connection):
     cur = conn.cursor()
-    cur.execute(f"""
+    cur.execute("""
         UPDATE discord_sessions
         SET session_end = %s
         WHERE session_id = %s AND session_end IS NULL
-    """, (datetime.now(), session_id))
+    """, (datetime.now(timezone.utc), session_id))
+    logging.info(f"Session {session_id} stopped in DB at {datetime.now(timezone.utc)}")
     conn.commit()
+
+def load_active_sessions(conn) -> dict:
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT DISCORD_ID, session_id 
+        FROM discord_sessions 
+        WHERE session_end IS NULL
+    """)
+    return {row[0]: row[1] for row in cur.fetchall()}
+
 
 def take_ids(discord_channel_name, conn):
     cur = conn.cursor()
     logging.info(f"discord_channel_name = {discord_channel_name}")
-    cur.execute(f"""
+    cur.execute("""
         SELECT tg_chat_id FROM tracking WHERE DISCORD_ID = %s
     """, (discord_channel_name,))
     list_tg_ids = cur.fetchall()  # Fetch all rows from the query result
@@ -173,7 +185,12 @@ def run_discord_bot():
     global intents
     token = os.getenv('TOKEN')
     client = discord.Client(intents=intents)
-    ActiveSessions = {}
+    ActiveSessions = load_active_sessions(conn)
+
+    if not ActiveSessions:
+        logging.info("No active sessions found in the database.")
+    else:
+        logging.info(f"Active sessions loaded: {ActiveSessions}")
 
     @client.event
     async def on_ready():
@@ -189,7 +206,7 @@ def run_discord_bot():
         for guild in client.guilds:
             if guild.name not in text_channel_list:
                 text_channel_list.append(guild.name)
-                cur.execute(f"""
+                cur.execute("""
                     INSERT INTO tracking (DISCORD_ID, tg_chat_id)
                     VALUES (%s, ARRAY[]::BIGINT[])  -- Insert new DISCORD_ID with empty tg_chat_id array
                     ON CONFLICT (DISCORD_ID)  -- If DISCORD_ID already exists
@@ -215,13 +232,18 @@ def run_discord_bot():
             
             session = Session(
                 generate_uuid(),
-                user_trigger,
                 member.id,
-                datetime.now()
+                discord_channel_name,
+                datetime.now(timezone.utc)
             )
-            ActiveSessions[session.username] = session.session_id
+            
+            logging.debug(f"Created session: {session.__dict__}")
+            ActiveSessions[session.user_id] = session.session_id
+
+            logging.info(f"ActiveSessions updated: {ActiveSessions}")
             add_session_to_db(session, conn)
 
+            logging.info(f"Session added to DB: {session.__dict__}")
             content = {
                 "message": event_msg,
                 "event_id": generate_uuid(), 
@@ -248,10 +270,13 @@ def run_discord_bot():
                 "is_join": 'f',
                 "data_type": "message"
             }
-            session_id = ActiveSessions.get(user_trigger)
+            session_id = ActiveSessions.get(member.id)
+            logging.info(f"Session ID for user {member.id}: {session_id}")
             if session_id:
                 stop_session_in_db(session_id, conn)
-                ActiveSessions.pop(user_trigger, None)
+                logging.debug(f"Session {session_id} stopped in DB for user {member.id}")
+                ActiveSessions.pop(member.id, None)
+                logging.info(f"Session {session_id} removed from ActiveSessions for user {member.id}")
 
             message = Message(content, discord_channel_name, URL)
             
@@ -265,7 +290,7 @@ def run_discord_bot():
         logging.info(f"event {event.name} has been created, guild = {event.guild}, channel = {event.channel}")
         conn = db_connect()  
         event_time = (event.start_time + timedelta(hours=3)).strftime("%d %B, %H:%M")
-        event_message = f"**{event.name}** in {event.guild}. Start - **{event_time}**"
+        event_msg = f"**{event.name}** in {event.guild}. Start - **{event_time}**"
         content = {
                 "message": event_msg,
                 "event_id": generate_uuid(),
@@ -274,7 +299,7 @@ def run_discord_bot():
             }
         message = Message(content, event.guild, URL)
         send_data(message, conn)
-        logging.info(f"send data - {event_message} to {event.guild}")
+        logging.info(f"send data - {event_msg} to {event.guild}")
         conn.commit()
         conn.close()
 
@@ -283,16 +308,16 @@ def run_discord_bot():
         logging.info(f"event {event.name} has been created, guild = {event.guild}, channel = {event.channel}")
         conn = db_connect()
         event_time = (event.start_time + timedelta(hours=3)).strftime("%d %B, %H:%M")
-        event_message = f"**{event.name}** in {event.guild}. Start - **{event_time}** IS DELETED"
+        event_msg = f"**{event.name}** in {event.guild}. Start - **{event_time}** IS DELETED"
         content = {
-                "message": event_message,
+                "message": event_msg,
                 "event_id": generate_uuid(),
                 "is_join": 'f',
                 "data_type": "event"
             }
         message = Message(content, event.guild, URL)
         send_data(message, conn)
-        logging.info(f"send data - {event_message} to {event.guild}")
+        logging.info(f"send data - {event_msg} to {event.guild}")
         conn.commit()
         conn.close()
 
