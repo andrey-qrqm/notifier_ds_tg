@@ -92,14 +92,16 @@ def create_database_conn():
         DISCORD_ID TEXT PRIMARY KEY,
         tg_chat_id BIGINT[]  -- Array of BIGINTs (PostgreSQL only)
     );
-    
-    CREATE TABLE IF NOT EXISTS discord_to_telegram_delays (
-        event_id UUID PRIMARY KEY,
-        discord_event_timestamp TIMESTAMP NOT NULL,
-        telegram_notification_timestamp TIMESTAMP NOT NULL
-    );
 
-    """)
+    CREATE TABLE IF NOT EXISTS discord_sessions (
+        session_id UUID PRIMARY KEY,
+        username TEXT NOT NULL,
+        DISCORD_ID TEXT NOT NULL,
+        session_start TIMESTAMP NOT NULL,
+        session_end TIMESTAMP
+    """
+    )
+
     conn.commit()
     cur.execute("""SELECT * FROM tracking""")
     channels = cur.fetchall()
