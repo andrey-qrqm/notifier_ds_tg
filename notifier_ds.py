@@ -185,7 +185,8 @@ def run_discord_bot():
     global intents
     token = os.getenv('TOKEN')
     client = discord.Client(intents=intents)
-
+    ActiveSessions = {}  # Dictionary to store active sessions {user_id: session_id}
+    
     @client.event
     async def on_ready():
         logging.info(f"{client.user} is now running")
