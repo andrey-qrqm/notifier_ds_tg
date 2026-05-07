@@ -213,9 +213,12 @@ async def get_sessions(message):
     chat_id = str(message.chat.id)
 
     cur.execute("""
-        SELECT *
+        SELECT user_id,
+        DATEDIFF(minute, session_start, session_end) AS duration_minutes
         FROM discord_sessions
         WHERE DISCORD_ID = %s AND session_end IS NOT NULL
+        GROUP BY user_id
+        ORDER BY duration_minutes DESC;
     """, (discord_id,))
     
     sessions = cur.fetchall()  # Fetch all rows from the query
