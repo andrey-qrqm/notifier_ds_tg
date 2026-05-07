@@ -229,6 +229,16 @@ def run_discord_bot():
 
             user_trigger = str(check_nickname_not_none(member))
             logging.info(f"user joined: {user_trigger}")
+
+            cur.execute("""
+                INSERT INTO discord_usernames (user_id, username)
+                VALUES (%s, %s)
+                ON CONFLICT (user_id) 
+                DO UPDATE SET username = EXCLUDED.username;
+            """, (member.id, user_trigger))
+            
+            conn.commit()
+
             event_msg = user_trigger + ' joined the channel ' + str(after.channel)  # create an output
             logging.info(f"event_msg created: {event_msg}")
             
