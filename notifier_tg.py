@@ -214,7 +214,7 @@ async def get_sessions(message):
 
     cur.execute("""
         SELECT user_id,
-            EXTRACT(EPOCH FROM (session_end - session_start)) / 60 AS duration_minutes
+            ROUND(SUM(EXTRACT(EPOCH FROM (session_end - session_start)) / 60))::INT AS duration_minutes
         FROM discord_sessions
         WHERE DISCORD_ID = %s AND session_end IS NOT NULL
         GROUP BY user_id
