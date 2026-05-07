@@ -207,6 +207,23 @@ async def remove_channel(message):
     await bot.reply_to(message, text)
 
 
+@bot.message_handler(commands='get_sessions')
+async def get_sessions(message):
+    discord_id = str(extract_arg(message.text))
+    chat_id = str(message.chat.id)
+
+    cur.execute("""
+        SELECT *
+        FROM discord_sessions
+        WHERE DISCORD_ID = %s AND session_end IS NOT NULL
+    """, (discord_id,))
+    
+    sessions = cur.fetchall()  # Fetch all rows from the query
+    text = f"Sessions for discord ID {discord_id}: {sessions}"
+    logging.info(text)
+    await bot.reply_to(message, text)    
+
+
 def run():
     try:
         asyncio.run(bot.polling())
