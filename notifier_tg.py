@@ -218,11 +218,13 @@ async def get_sessions(message):
     chat_id = str(message.chat.id)
 
     cur.execute("""
-        SELECT user_id,
-            ROUND(SUM(EXTRACT(EPOCH FROM (session_end - session_start)) / 60))::INT AS duration_minutes
-        FROM discord_sessions
-        WHERE DISCORD_ID = %s AND session_end IS NOT NULL
-        GROUP BY user_id
+        SELECT ds.user_id,
+            ROUND(SUM(EXTRACT(EPOCH FROM (ds.session_end - ds.session_start)) / 60))::INT AS duration_minutes,
+            du.username
+        FROM discord_sessions AS ds
+        LEFT JOIN discord_usernames AS du ON ds.user_id = du.user_id
+        WHERE ds.DISCORD_ID = %s AND ds.session_end IS NOT NULL
+        GROUP BY du.username, ds.user_id
         ORDER BY duration_minutes DESC;
     """, (discord_id,))
     
