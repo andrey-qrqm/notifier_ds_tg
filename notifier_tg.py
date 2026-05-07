@@ -99,7 +99,12 @@ def create_database_conn():
         DISCORD_ID TEXT NOT NULL,
         session_start TIMESTAMPTZ NOT NULL,
         session_end TIMESTAMPTZ
-        );
+    );
+
+    CREATE TABLE IF NOT EXISTS discord_usernames (
+        user_id TEXT PRIMARY KEY,
+        username TEXT NOT NULL
+    );
     """
     )
 
