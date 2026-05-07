@@ -229,7 +229,16 @@ async def get_sessions(message):
     """, (discord_id,))
     
     sessions = cur.fetchall()  # Fetch all rows from the query
-    text = f"Sessions for discord ID {discord_id}: {sessions}"
+    text = f"Sessions for discord ID {discord_id}:\n"
+
+    for session in sessions:
+        user_id, duration_minutes, username = session
+        if username is not None:
+            line = f"User: {username}, Duration: {duration_minutes} minutes"
+        else:
+            line = f"User ID: {user_id}, Duration: {duration_minutes} minutes"
+        text += "\n" + line
+
     logging.info(text)
     await bot.reply_to(message, text)    
 
