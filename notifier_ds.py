@@ -23,7 +23,6 @@ TOKEN_TG = os.getenv('TOKEN_TG')
 CHAT_ID = int(os.getenv('CHAT_ID'))
 TOPIC_ID = int(os.getenv('TOPIC_ID'))
 intents = discord.Intents.all()
-URL = f'https://api.telegram.org/bot{TOKEN_TG}/sendMessage'
 
 print("Started")
 logging.info('notifier_ds is started')
@@ -37,10 +36,10 @@ kafka_app = Application(
 
 
 class Message():
-    def __init__(self, content, channel, destination):
+    def __init__(self, content, channel):
         self.content = content
         self.channel = channel
-        self.destination = destination
+
 
 class Session():
     def __init__(self, session_id, user_id, DISCORD_ID, session_start, session_end=None):
@@ -266,7 +265,7 @@ def run_discord_bot():
                 "is_join": 't', 
                 "data_type": "message"
             }
-            message = Message(content, discord_channel_name, URL)
+            message = Message(content, discord_channel_name)
 
             send_data(message, conn)  # Call func to send data on tg
             conn.commit()
@@ -295,7 +294,7 @@ def run_discord_bot():
                 ActiveSessions.pop(member.id, None)
                 logging.info(f"Session {session_id} removed from ActiveSessions for user {member.id}")
 
-            message = Message(content, discord_channel_name, URL)
+            message = Message(content, discord_channel_name)
             
             send_data(message, conn)  # Call func to send data on tg
             conn.commit()
@@ -314,7 +313,7 @@ def run_discord_bot():
                 "is_join": 't',
                 "data_type": "event"
             }
-        message = Message(content, event.guild, URL)
+        message = Message(content, event.guild)
         send_data(message, conn)
         logging.info(f"send data - {event_msg} to {event.guild}")
         conn.commit()
@@ -332,7 +331,7 @@ def run_discord_bot():
                 "is_join": 'f',
                 "data_type": "event"
             }
-        message = Message(content, event.guild, URL)
+        message = Message(content, event.guild)
         send_data(message, conn)
         logging.info(f"send data - {event_msg} to {event.guild}")
         conn.commit()
