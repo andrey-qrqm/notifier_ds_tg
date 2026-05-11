@@ -222,8 +222,10 @@ def run_discord_bot():
 
     @client.event
     async def on_voice_state_update(member, before, after):
-        # Event of joining and leaving:
+
         discord_channel_name = str(member.guild)
+
+        #ON JOIN
         if not before.channel and after.channel:
             conn = db_connect()  # On this conn
 
@@ -270,6 +272,7 @@ def run_discord_bot():
             conn.commit()
             conn.close()
 
+        #ON LEAVE
         elif before.channel and not after.channel:
             conn = db_connect()  # On this conn
 
