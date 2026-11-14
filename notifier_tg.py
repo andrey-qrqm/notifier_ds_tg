@@ -92,14 +92,22 @@ def create_database_conn():
         DISCORD_ID TEXT PRIMARY KEY,
         tg_chat_id BIGINT[]  -- Array of BIGINTs (PostgreSQL only)
     );
-    
-    CREATE TABLE IF NOT EXISTS discord_to_telegram_delays (
-        event_id UUID PRIMARY KEY,
-        discord_event_timestamp TIMESTAMP NOT NULL,
-        telegram_notification_timestamp TIMESTAMP NOT NULL
+
+    CREATE TABLE IF NOT EXISTS discord_sessions (
+        session_id UUID PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        DISCORD_ID TEXT NOT NULL,
+        session_start TIMESTAMPTZ NOT NULL,
+        session_end TIMESTAMPTZ
     );
 
-    """)
+    CREATE TABLE IF NOT EXISTS discord_usernames (
+        user_id TEXT PRIMARY KEY,
+        username TEXT NOT NULL
+    );
+    """
+    )
+
     conn.commit()
     cur.execute("""SELECT * FROM tracking""")
     channels = cur.fetchall()
@@ -152,16 +160,16 @@ async def add_channel(message):
         logging.info(f"channel {channel} is found in existing guilds")
         print(channel)
         logging.info(f"Adding channel {channel} for chat ID {chat_id}")
-        cur.execute(f"""
+        cur.execute("""
             INSERT INTO tracking (DISCORD_ID, tg_chat_id)
-            VALUES ('{channel}', ARRAY[{chat_id}]::BIGINT[])  -- Insert new DISCORD_ID with initial tg_chat_id array
+            VALUES (%s, ARRAY[%s]::BIGINT[])  -- Insert new DISCORD_ID with initial tg_chat_id array
             ON CONFLICT (DISCORD_ID)  -- If DISCORD_ID already exists
             DO UPDATE
             SET tg_chat_id = CASE
-                WHEN NOT ARRAY[{chat_id}]::BIGINT[] <@ tracking.tg_chat_id THEN tracking.tg_chat_id || {chat_id}
+                WHEN NOT ARRAY[%s]::BIGINT[] <@ tracking.tg_chat_id THEN tracking.tg_chat_id || ARRAY[%s]::BIGINT[]  -- Append new chat_id if it's not already in the array
                 ELSE tracking.tg_chat_id
             END;
-        """)
+        """, (channel, chat_id, chat_id, chat_id))
 
         conn.commit()  # Commit the insert/update operation
 
@@ -184,15 +192,15 @@ async def remove_channel(message):
     logging.info(f"Removing channel {channel} for chat ID {chat_id}")
 
     # SQL query to delete the chat ID from the tg_chat_id array
-    cur.execute(f"""
+    cur.execute("""
         UPDATE tracking
         SET tg_chat_id = ARRAY(
             SELECT unnest(tg_chat_id)
             EXCEPT
-            SELECT {chat_id}::BIGINT
+            SELECT %s::BIGINT
         )
-        WHERE DISCORD_ID = '{channel}' AND {chat_id}::BIGINT = ANY(tg_chat_id);
-    """)
+        WHERE DISCORD_ID = %s AND %s::BIGINT = ANY(tg_chat_id);
+    """, (chat_id, channel, chat_id))
 
     conn.commit()  # Commit the update operation
 
@@ -202,6 +210,37 @@ async def remove_channel(message):
     text = f"Channel removed. Updated tracking data: {result}"
     logging.info(text)
     await bot.reply_to(message, text)
+
+
+@bot.message_handler(commands='get_sessions')
+async def get_sessions(message):
+    discord_id = str(extract_arg(message.text))
+    chat_id = str(message.chat.id)
+
+    cur.execute("""
+        SELECT ds.user_id,
+            ROUND(SUM(EXTRACT(EPOCH FROM (ds.session_end - ds.session_start)) / 60))::INT AS duration_minutes,
+            du.username
+        FROM discord_sessions AS ds
+        LEFT JOIN discord_usernames AS du ON ds.user_id = du.user_id
+        WHERE ds.DISCORD_ID = %s AND ds.session_end IS NOT NULL
+        GROUP BY du.username, ds.user_id
+        ORDER BY duration_minutes DESC;
+    """, (discord_id,))
+    
+    sessions = cur.fetchall()  # Fetch all rows from the query
+    text = f"Sessions for discord ID {discord_id}:\n"
+
+    for session in sessions:
+        user_id, duration_minutes, username = session
+        if username is not None:
+            line = f"User: {username}, Duration: {duration_minutes} minutes"
+        else:
+            line = f"User ID: {user_id}, Duration: {duration_minutes} minutes"
+        text += "\n" + line
+
+    logging.info(text)
+    await bot.reply_to(message, text)    
 
 
 def run():
