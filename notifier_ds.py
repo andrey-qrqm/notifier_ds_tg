@@ -313,9 +313,9 @@ def run_discord_bot():
                 "is_join": 't',
                 "data_type": "event"
             }
-        message = Message(content, event.guild)
+        message = Message(content, str(event.guild))
         send_data(message, conn)
-        logging.info(f"send data - {event_msg} to {event.guild}")
+        logging.info(f"send data - {event_msg} to {str(event.guild)}")
         conn.commit()
         conn.close()
 
@@ -331,9 +331,9 @@ def run_discord_bot():
                 "is_join": 'f',
                 "data_type": "event"
             }
-        message = Message(content, event.guild)
+        message = Message(content, str(event.guild))
         send_data(message, conn)
-        logging.info(f"send data - {event_msg} to {event.guild}")
+        logging.info(f"send data - {event_msg} to {str(event.guild)}")
         conn.commit()
         conn.close()
 
