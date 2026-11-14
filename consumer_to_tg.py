@@ -26,27 +26,31 @@ try:
             msg = consumer.poll(1)
 
             if msg is None:
-                print("waiting...")
+                continue
             elif msg.error() is not None:
                 raise Exception(msg.error())
             else:
                 key = msg.key().decode('utf-8')
                 value = json.loads(msg.value())
                 offset = msg.offset()
-                print(f"{offset, key, value}")
+                logging.debug(f"{offset, key, value}")
                 if key == "message":
                     if value["chat_id"] is not None:
+
                         logging.info(f"Sending {value['text']} to {value['chat_id']}")
                         requests.post(URL, value).json()
                         logging.info(f"POST sent")
+
                     else:
                         logging.error(f"value does not have a chat_id {value}")
 
                 if key == "event":
                     if value["chat_id"] is not None:
+
                         logging.info(f"Sending {value['text']} to {value['chat_id']}")
                         requests.post(URL, value).json()
                         logging.info(f"POST sent")
+
                     else:
                         logging.error(f"value does not have a chat_id {value}")
 
